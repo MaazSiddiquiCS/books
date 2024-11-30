@@ -1,0 +1,23 @@
+ALTER TABLE books ADD PRIMARY key (book_id);
+ALTER TABLE authors ADD PRIMARY KEY(author_id);
+ALTER TABLE genres ADD PRIMARY KEY(genre_id);
+ALTER TABLE publishers ADD PRIMARY KEY(publisher_id);
+ALTER TABLE series ADD PRIMARY key(series_id);
+alter TABLE subjects ADD PRIMARY KEY(subject_id);
+ALTER TABLE booklinks ADD PRIMARY KEY(link_id);
+ALTER TABLE publisher_contacts ADD PRIMARY key(contact_id);
+ALTER TABLE series_books ADD PRIMARY key(series_books_id);
+ALTER TABLE booktitles ADD PRIMARY KEY(id);
+
+
+ALTER TABLE authorbooks ADD CONSTRAINT fk_authorbookau FOREIGN key(author_id) REFERENCES authors(author_id);
+ALTER TABLE authorbooks ADD CONSTRAINT fk_authorbookbk FOREIGN key(author_id) REFERENCES books(book_id);
+ALTER TABLE booklinks ADD CONSTRAINT fk_linksbk FOREIGN key(book_id) REFERENCES books(book_id);
+ALTER TABLE booktitles ADD CONSTRAINT fk_titlesbk FOREIGN key(book_id) REFERENCES books(book_id);
+ALTER TABLE book_genre ADD CONSTRAINT fk_genrebk FOREIGN key(book_id) REFERENCES books(book_id);
+ALTER TABLE book_genre ADD CONSTRAINT fk_genreid FOREIGN key(genre_id) REFERENCES genres(genre_id);
+ALTER TABLE book_publisher ADD CONSTRAINT fk_pblsh FOREIGN key(publisher_id) REFERENCES publishers(publisher_id);
+ALTER TABLE book_publisher ADD CONSTRAINT fk_pblshbk FOREIGN key(book_id) REFERENCES books(book_id);
+ALTER TABLE publisher_contacts ADD CONSTRAINT fk_pblshid FOREIGN key(publisher_id) REFERENCES publishers(publisher_id);
+ALTER TABLE series_books ADD CONSTRAINT fk_seriesbk FOREIGN key(book_id) REFERENCES books(book_id);
+ALTER TABLE series_books ADD CONSTRAINT fk_seriesid FOREIGN key(series_id) REFERENCES series_books(series_id);
