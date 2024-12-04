@@ -12,6 +12,8 @@ import Settings from './pages/Settings';
 import Help from './pages/Help';
 import LoginModal from './components/LoginModal';
 import ExploreNow from 'pages/ExploreNow';
+import BookDetail from 'pages/BookDetails';
+
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -36,6 +38,7 @@ const App: React.FC = () => {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="/ExploreNow" element={<ExploreNow />} />
+                <Route path="/BookDetail/:id" element={<BookDetail />} />
               </Routes>
             </div>
           </main>
