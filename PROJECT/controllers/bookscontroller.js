@@ -1,21 +1,37 @@
 const db = require('../db/connection');
 // Get all books
 exports.getAllBooks = (req, res) => {
-    db.query(`SELECT b.book_id, 
-       MIN(t.title) AS title, 
-       b.published_date, 
-       b.language
-FROM books b
-JOIN booktitles t ON b.book_id = t.book_id
-GROUP BY b.book_id, b.published_date, b.language;
-`, (err, results) => {
+    const { book_id } = req.query;
+
+    // Base query to fetch books
+    let query = `
+        SELECT 
+            b.book_id, 
+            MIN(t.title) AS title, 
+            b.published_date, 
+            b.language
+        FROM books b
+        JOIN booktitles t ON b.book_id = t.book_id`;
+
+    // Add filtering condition if book_id is provided
+    if (book_id) {
+        query += ` WHERE b.book_id = ?`;
+    }
+
+    query += ` GROUP BY b.book_id, b.published_date, b.language`;
+
+    // Execute the query
+    db.query(query, [book_id], (err, results) => {
         if (err) {
             console.error('Error fetching books:', err.message);
             return res.status(500).json({ error: 'Failed to fetch books' });
         }
-        res.json(results); // Ensure book_id and id are the same
+
+        // Return the query results as JSON
+        res.json(results);
     });
 };
+
 
 exports.getbookauthors = (req, res) => {
     db.query('SELECT a.name,b.book_id from authors a join authorbooks ab on a.author_id=ab.author_id join books b on ab.book_id=b.book_id', (err, results) => {

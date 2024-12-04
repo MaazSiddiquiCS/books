@@ -2,7 +2,10 @@ const db = require('../db/connection');
 
 // Get all books
 exports.getAllBooklinks = (req, res) => {
-    db.query('SELECT * FROM booklinks', (err, results) => {
+    db.query(` select bl.link, b.book_id FROM booklinks bl 
+        JOIN bookformat bf ON bl.type_id = bf.id 
+        JOIN books b ON bl.book_id = b.book_id 
+        WHERE bf.id = 4 AND bl.link LIKE '%.txt.utf-8'`, (err, results) => {
         if (err) {
             console.error('Error fetching links:', err.message);
             return res.status(500).json({ error: 'Failed to fetch links' });
