@@ -1,20 +1,47 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User } from 'lucide-react';
 
+// Define the base URL for the backend
+const baseUrl = 'https://localhost:5001';
+
 interface ModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
 const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignup, setIsSignup] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isSignup ? 'Signup submitted' : 'Login submitted', { email, password });
-    setIsOpen(false);
+
+    const endpoint = isSignup ? '/signup' : '/login';
+    const data = isSignup ? { name, email, password } : { email, password };
+
+    try {
+      const response = await fetch(`${baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.error || 'An error occurred. Please try again.');
+      } else {
+        alert(isSignup ? 'Signup successful' : 'Login successful');
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to connect to the server. Please try again.');
+    }
   };
 
   const passwordStrength = () => {
@@ -45,6 +72,8 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
                 required
                 className="w-full pl-10 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
@@ -74,7 +103,15 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
               className="w-full pl-10 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500"
             />
             {isSignup && (
-              <p className={`text-sm mt-1 ${passwordStrength() === 'Strong' ? 'text-green-500' : passwordStrength() === 'Medium' ? 'text-yellow-500' : 'text-red-500'}`}>
+              <p
+                className={`text-sm mt-1 ${
+                  passwordStrength() === 'Strong'
+                    ? 'text-green-500'
+                    : passwordStrength() === 'Medium'
+                    ? 'text-yellow-500'
+                    : 'text-red-500'
+                }`}
+              >
                 Password strength: {passwordStrength()}
               </p>
             )}
