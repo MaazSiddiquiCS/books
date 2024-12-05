@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Book, Calendar, LanguagesIcon as Language, Tag, User, ChevronDown, ChevronUp } from 'lucide-react';
-import { fetchBookDetails } from './api';
-
+import { fetchBookDetails, pushReadLater } from './api';
+import{ReadLater} from './api';
 interface Review {
   id: number;
   user: string;
@@ -23,7 +23,7 @@ interface BookDetails {
   authors: string;
   cover: string;
   ratings: number;
-  links: string;  // The link to the book
+  links: string; // The link to the book
   reviews?: Review[];
 }
 
@@ -46,13 +46,48 @@ const formatDate = (dateString: string) => {
 };
 
 const BookDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); 
+  const { id } = useParams<{ id: string }>();
   const bookId = id ? Number(id) : null;
 
   const [book, setBook] = useState<BookDetails | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleAddToReadLater = async () => {
+    // Check if bookId is valid (this might be dynamic or passed from props)
+    if (!bookId) {
+      alert('Book ID is invalid.');
+      return;
+    }
+  
+    // Assuming user_id is fetched from authentication (replace with your actual logic)
+    const userId = 1; // Replace with actual logic to get current user ID (e.g., from context or authentication)
+    if (!userId) {
+      alert('User is not authenticated.');
+      return;
+    }
+  
+    // Structure the data for the request
+    const readLaterData: ReadLater = {
+      user_id: userId,
+      book_id: bookId,  // Make sure this matches the backend's expectation for the field name
+      added_at: new Date().toISOString(),
+    };
+  
+    console.log('Sending ReadLater data:', readLaterData); // Log the data being sent
+  
+    try {
+      // Call the API function to add the book to the "Read Later" list
+      await pushReadLater(readLaterData);
+      alert('Added to Read Later successfully!');
+    } catch (err) {
+      // Error handling
+      console.error('Failed to add to Read Later:', err);
+      alert('Failed to add to Read Later. Please try again.');
+    }
+  };
+  
 
   useEffect(() => {
     const loadBookDetails = async () => {
@@ -64,7 +99,7 @@ const BookDetailsPage: React.FC = () => {
       try {
         const bookdetail = await fetchBookDetails(bookId);
         setBook(bookdetail);
-        console.log("detail:", bookdetail);
+        console.log('detail:', bookdetail);
         setLoading(false);
       } catch (err) {
         setError('Failed to load book details. Please try again later.');
@@ -102,23 +137,23 @@ const BookDetailsPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="lg:w-2/3">
             <h1 className="text-5xl font-bold mb-2 text-blue-900 leading-tight">{book.bookdetail.title}</h1>
             <h2 className="text-3xl text-blue-700 mb-4">by {book.authors}</h2>
-            
+
             <div className="flex items-center mb-6">
               <StarRating rating={book.ratings} />
               <span className="ml-2 text-blue-600 font-semibold">({book.ratings})</span>
             </div>
-            
+
             <div className="mb-8 bg-white p-8 rounded-2xl shadow-lg">
               <h3 className="text-2xl font-semibold mb-4 text-blue-900">Description</h3>
               <p className={`text-blue-800 leading-relaxed ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sit amet accumsan turpis.
-                {isDescriptionExpanded && " Vivamus vitae est et nisi bibendum dignissim."}
+                {isDescriptionExpanded && ' Vivamus vitae est et nisi bibendum dignissim.'}
               </p>
-              <button 
+              <button
                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                 className="mt-2 text-blue-600 hover:text-blue-800 transition-colors duration-200 flex items-center"
               >
@@ -135,7 +170,7 @@ const BookDetailsPage: React.FC = () => {
                 )}
               </button>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <div className="bg-white p-8 rounded-2xl shadow-lg">
                 <h3 className="text-2xl font-semibold mb-6 text-blue-900">Details</h3>
@@ -169,20 +204,25 @@ const BookDetailsPage: React.FC = () => {
               </div>
               <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col justify-between">
                 <div className="space-y-4">
-                  <button className="w-full bg-blue-600 text-white py-3 px-6 rounded-full hover:bg-blue-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                    <ShoppingCart className="w-6 h-6 mr-2" />
-                    Add to Cart
+                  <button
+                    onClick={handleAddToReadLater}
+                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-full hover:bg-yellow-600 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    Add to Read Later
                   </button>
                   <button className="w-full bg-red-600 text-white py-3 px-6 rounded-full hover:bg-red-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     <Heart className="w-6 h-6 mr-2" />
-                    Add to Wishlist
+                    Favorite
+                  </button>
+                  <button
+                    className="w-full bg-blue-500 text-white py-3 px-6 rounded-full hover:bg-blue-600 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  >
+                    <ShoppingCart className="w-6 h-6 mr-2" />
+                    Add to Cart
                   </button>
                 </div>
-              </div>
-            </div>
-
-            {/* Open the book link */}
-            <div className="mt-6">
+                <div>
+                <div className="mt-6">
               <button 
                 onClick={() => window.open(book.links, '_blank')} 
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-full hover:bg-lightblue-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
@@ -190,20 +230,25 @@ const BookDetailsPage: React.FC = () => {
                 Read Book
               </button>
             </div>
-            
-            {/* Reviews */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg">
-              <h3 className="text-2xl font-semibold mb-6 text-blue-900">Customer Reviews</h3>
+</div>
+              </div>
+            </div>
+
+            <div className="mb-12">
+              <h3 className="text-2xl font-semibold mb-6 text-blue-900">Reviews</h3>
               {book.reviews && book.reviews.length > 0 ? (
                 book.reviews.map((review) => (
-                  <div key={review.id} className="mb-8">
-                    <StarRating rating={review.rating} />
-                    <p className="text-blue-800 mt-2">{review.comment}</p>
-                    <p className="text-sm text-gray-500 mt-2">By {review.user} on {review.date}</p>
+                  <div key={review.id} className="mb-4 bg-white p-4 rounded-lg shadow">
+                    <div className="flex items-center mb-2">
+                      <StarRating rating={review.rating} />
+                      <span className="ml-2 text-blue-600 font-medium">{review.user}</span>
+                    </div>
+                    <p className="text-blue-800">{review.comment}</p>
+                    <div className="text-blue-500 text-sm mt-2">{formatDate(review.date)}</div>
                   </div>
                 ))
               ) : (
-                <p>No reviews yet. Be the first to review!</p>
+                <p className="text-blue-800">No reviews yet.</p>
               )}
             </div>
           </div>

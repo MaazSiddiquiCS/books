@@ -238,6 +238,38 @@ export const fetchLogin = async (email: string, password: string) => {
   }
 };
 
+// Define the interface for Read Later data
+export interface ReadLater {
+  //read_later_id: number;
+  user_id: number;
+  book_id: number;
+  added_at: string;
+}
+// Function to add book to "Read Later" list
+export const pushReadLater = async (readLaterData: ReadLater) => {
+  const response = await fetch('http://localhost:5001/readLater', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userId: readLaterData.user_id, // Ensure the field names match what the backend expects
+      bookId: readLaterData.book_id,
+      addedAt: readLaterData.added_at,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to add to Read Later');
+  }
+
+  return response.json();
+};
+
+
+
+
+
 
 
   

@@ -59,7 +59,12 @@ export default function ExploreNow() {
           }));
         }
         console.log('Books fetched for ExploreNow:', response);
-        setBooks(response);
+        const sortedBooks = response.sort((a, b) =>
+          sortOrder === 'desc' ? b.ratings - a.ratings : a.ratings - b.ratings
+        );
+
+        setBooks(sortedBooks);
+
       } catch (error) {
         console.error('Error fetching books:', error);
       } finally {
@@ -68,7 +73,7 @@ export default function ExploreNow() {
     };
   
     loadBooks();
-  }, [selectedGenre]);
+  }, [selectedGenre,sortOrder]);
   
 
   // Paginate books
