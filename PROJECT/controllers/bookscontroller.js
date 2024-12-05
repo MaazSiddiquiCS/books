@@ -108,3 +108,44 @@ exports.addBook = (req, res) => {
         }
     );
 };
+
+exports.addBookmark = (req, res) => {
+    const { user_id, book_id, bookmark_date } = req.body;
+
+    // Validate input data
+    if (!user_id || !book_id) {
+        return res.status(400).json({ error: 'User ID and Book ID are required' });
+    }
+
+    // First, check if the book is already in the user's bookmarks
+    db.execute('SELECT * FROM bookmarks WHERE user_id = ? AND book_id = ?', [user_id, book_id], (error, rows) => {
+        if (error) {
+            console.error('Error during query:', error);
+            return res.status(500).json({ error: 'Error checking bookmarks', details: error.message });
+        }
+
+        // If the book is already bookmarked, return an error
+        if (rows.length > 0) {
+            return res.status(400).json({ error: 'Book is already in your bookmarks' });
+        }
+
+        // Insert the bookmark
+        db.execute(
+            'INSERT INTO bookmarks (user_id, book_id, bookmark_date) VALUES (?, ?, ?)',
+            [user_id, book_id, bookmark_date],
+            (insertError, insertResult) => {
+                if (insertError) {
+                    console.error('Error inserting bookmark:', insertError);
+                    return res.status(500).json({ error: 'Error adding bookmark', details: insertError.message });
+                }
+
+                // Return success message and the newly inserted bookmark_id
+                res.status(201).json({
+                    message: 'Bookmark added successfully',
+                    bookmark_id: insertResult.insertId,
+                });
+            }
+        );
+    });
+};
+

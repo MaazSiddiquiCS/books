@@ -2,7 +2,8 @@ const db = require('../db/connection');
 
 // Get all books
 exports.getReadLater = (req, res) => {
-    db.query('SELECT* from readlater ', (err, results) => {
+    db.query(`SELECT book_id FROM readlater WHERE user_id = ?`,
+      [user_id], (err, results) => {
         if (err) {
             console.error('Error fetching authors:', err.message);
             return res.status(500).json({ error: 'Failed to fetch authors' });

@@ -67,3 +67,22 @@ exports.login = (req, res) => {
       });
   });
 };
+exports.getuserbyemail = (req, res) => {
+  const { email } = req.body; // Destructure the 'email' field from the request body
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' }); // Handle missing email error
+  }
+
+  db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Error fetching user by email:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch user' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'User not found' }); // Handle case where no user is found
+    }
+
+    res.json(results); // Send the results back
+  });
+};
