@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User } from 'lucide-react';
-
+import{getUserByEmail} from 'pages/api'
 interface ModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -25,7 +25,10 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
       alert('A user is already logged in. Please log out first.');
       return;
     }
-  
+    const User_Email = sessionStorage.getItem('userEmail');
+
+
+
     // Check if required fields are present
     if (!formData.email || !formData.password || (isSignup && !formData.name)) {
       alert('Please fill in all required fields.');
@@ -58,7 +61,10 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
         // Store email and user ID in sessionStorage on successful login
         if (!isSignup) {
           sessionStorage.setItem('userEmail', formData.email);
-          sessionStorage.setItem('userId', result.userId); // Store the user ID from the server response
+          const user_id= await getUserByEmail(formData.email);
+      console.log(user_id[0].user_id);
+      sessionStorage.setItem('userID', user_id[0].user_id);
+           // Store the user ID from the server response
           displayEmailInModal(formData.email);
         }
   
