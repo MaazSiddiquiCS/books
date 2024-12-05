@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Book, Calendar, LanguagesIcon as Language, Tag, User, ChevronDown, ChevronUp } from 'lucide-react';
-import { fetchBookDetails, pushReadLater } from './api';
+import { fetchBookDetails, pushReadLater,addBookmark } from './api';
 import{ReadLater} from './api';
+import{Bookmark} from './api';
 interface Review {
   id: number;
   user: string;
@@ -62,7 +63,8 @@ const BookDetailsPage: React.FC = () => {
     }
   
     // Assuming user_id is fetched from authentication (replace with your actual logic)
-    const userId = 1; // Replace with actual logic to get current user ID (e.g., from context or authentication)
+      const userId = sessionStorage.getItem('userID');  
+      console.log("book detail id",userId);
     if (!userId) {
       alert('User is not authenticated.');
       return;
@@ -88,7 +90,36 @@ const BookDetailsPage: React.FC = () => {
     }
   };
   
+  const handleAddBookmark = async () => {
+    if (!bookId) {
+        alert('Book ID is invalid.');
+        return;
+    }
 
+    const userId = sessionStorage.getItem('userID');
+    if (!userId) {
+        alert('User is not authenticated.');
+        return;
+    }
+
+    const bookmarkData = {
+        user_id: userId,
+        book_id: bookId,
+        added_at: new Date().toISOString(), // Matches "bookmark_date" in backend
+    };
+
+    console.log('Sending Bookmark data:', bookmarkData);
+
+    try {
+        await addBookmark(bookmarkData);
+        alert('Bookmarked successfully!');
+    } catch (err) {
+        console.error('Failed to add bookmark:', err);
+        alert('Failed to add bookmark. Please try again.');
+    }
+};
+
+  
   useEffect(() => {
     const loadBookDetails = async () => {
       if (bookId === null) {
@@ -224,7 +255,13 @@ const BookDetailsPage: React.FC = () => {
                 <div>
                 <div className="mt-6">
               <button 
-                onClick={() => window.open(book.links, '_blank')} 
+                onClick={() => {
+                  // First, open the book link in a new tab
+                  window.open(book.links, '_blank');
+              
+                  // Then, add the book to bookmarks
+                  handleAddBookmark();
+                }}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-full hover:bg-lightblue-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 Read Book

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Search, Clock, Trash2, Calendar, BookMarked } from 'lucide-react';
+import { fetchReadLaterBooks } from './api';
 
 interface Book {
   id: number;
@@ -9,15 +10,7 @@ interface Book {
   addedDate: string;
 }
 
-const readLaterBooks: Book[] = [
-  { id: 1, title: "The Midnight Library", author: "Matt Haig", cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=300&q=80", addedDate: "2023-05-15" },
-  { id: 2, title: "Atomic Habits", author: "James Clear", cover:  "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=300&q=80", addedDate: "2023-05-10" },
-  { id: 3, title: "The Invisible Life of Addie LaRue", author: "V.E. Schwab", cover: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=300&q=80", addedDate: "2023-05-05" },
-  { id: 4, title: "Project Hail Mary", author: "Andy Weir", cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=300&q=80", addedDate: "2023-04-30" },
-  { id: 5, title: "The Paris Apartment", author: "Lucy Foley", cover: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=300&q=80", addedDate: "2023-04-25" },
-];
-
-const ReadLaterItem: React.FC<{ book: Book; onRemove: () => void }> = ({ book, onRemove }) => (
+const ReadLaterItem: React.FC<{ book: Book; onRemove: (id: number) => void }> = ({ book, onRemove }) => (
   <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-md transition duration-300 hover:shadow-lg">
     <img src={book.cover} alt={book.title} className="w-16 h-24 object-cover rounded-md" />
     <div className="flex-grow">
@@ -35,7 +28,7 @@ const ReadLaterItem: React.FC<{ book: Book; onRemove: () => void }> = ({ book, o
       <button className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition duration-300" title="Mark as Read">
         <BookMarked className="h-5 w-5" />
       </button>
-      <button onClick={onRemove} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300" title="Remove from Read Later">
+      <button onClick={() => onRemove(book.id)} className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300" title="Remove from Read Later">
         <Trash2 className="h-5 w-5" />
       </button>
     </div>
@@ -43,17 +36,38 @@ const ReadLaterItem: React.FC<{ book: Book; onRemove: () => void }> = ({ book, o
 );
 
 const ReadLater: React.FC = () => {
-  const [books, setBooks] = useState(readLaterBooks);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [books, setBooks] = useState<Book[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredBooks = books.filter(book => 
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const userId = sessionStorage.getItem("userID");
+      if (!userId) {
+        alert("User is not authenticated.");
+        return;
+      }
+
+      try {
+        const enrichedBooks = await fetchReadLaterBooks(userId);
+        setBooks(enrichedBooks);
+      } catch (error) {
+        console.error("Error fetching books:", error);
+        alert("Failed to load your 'Read Later' list.");
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const removeBook = (id: number) => {
-    setBooks(books.filter(book => book.id !== id));
+    setBooks(books.filter((book) => book.id !== id));
   };
+
+  const filteredBooks = books.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -75,20 +89,20 @@ const ReadLater: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {filteredBooks.map(book => (
-          <ReadLaterItem key={book.id} book={book} onRemove={() => removeBook(book.id)} />
+        {filteredBooks.map((book) => (
+          <ReadLaterItem key={book.id} book={book} onRemove={removeBook} />
         ))}
       </div>
 
       {filteredBooks.length === 0 && (
         <div className="text-center py-12">
           <Clock className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-xl text-gray-600">Your read later list is empty.</p>
+          <p className="text-xl text-gray-600">Your 'Read Later' list is empty.</p>
           <p className="text-sm text-gray-500 mt-2">Start adding books you want to read!</p>
         </div>
       )}
     </div>
   );
-}
+};
 
 export default ReadLater;

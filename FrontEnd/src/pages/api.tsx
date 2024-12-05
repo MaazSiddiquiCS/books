@@ -241,7 +241,13 @@ export const fetchLogin = async (email: string, password: string) => {
 // Define the interface for Read Later data
 export interface ReadLater {
   //read_later_id: number;
-  user_id: number;
+  user_id: string;
+  book_id: number;
+  added_at: string;
+}
+export interface Bookmark {
+  //read_later_id: number;
+  user_id: string;
   book_id: number;
   added_at: string;
 }
@@ -265,8 +271,75 @@ export const pushReadLater = async (readLaterData: ReadLater) => {
 
   return response.json();
 };
+export const addBookmark = async (bookmarkData: Bookmark) => {
+  const response = await fetch('http://localhost:5001/books/addBookmark', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+          user_id: bookmarkData.user_id, 
+          book_id: bookmarkData.book_id,
+          bookmark_date: bookmarkData.added_at, // Correct the key name here
+      }),
+  });
 
+  if (!response.ok) {
+      throw new Error('Failed to add bookmark');
+  }
 
+  return response.json();
+};
+
+export async function getUserByEmail(email:any) {
+  try {
+    const response = await fetch(`${BASE_URL}/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', // Specify JSON content type
+      },
+      body: JSON.stringify({ email }), // Pass the email in the request body
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch user');
+    }
+
+    const data = await response.json(); // Parse the JSON response
+    console.log('User data:', data);
+    return data; // Return the data for further use
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    alert(error); // Optionally, show an alert for errors
+    return null; // Return null in case of an error
+  }
+}
+
+export const fetchReadLaterBooks = async (userId: string) => {
+  try {
+    // Fetch book IDs for the user's "Read Later" list
+    const response = await fetch(`${BASE_URL}/readLater/${userId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch 'Read Later' books");
+    }
+    const readLaterBooks = await response.json();
+
+    // Extract book IDs
+    const bookIds = readLaterBooks.map((item: { book_id: number }) => item.book_id);
+
+    // Fetch all books with authors
+    const allBooks = await fetchBooksWithAuthors();
+
+    // Filter books matching the "Read Later" book IDs
+    const enrichedBooks = allBooks.filter((book: any) => bookIds.includes(book.id));
+
+    return enrichedBooks;
+  } catch (error) {
+    console.error("Error fetching 'Read Later' books:", error);
+    return [];
+  }
+};
 
 
 
