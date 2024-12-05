@@ -11,6 +11,19 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch authors' });
     }
 });
+router.get('/', async (req, res) => {
+  const { user_id } = req.params;
+  if (!user_id) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+  try {
+    const [rows] = await readLaterController.getReadLater();
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching read later books:', error);
+    res.status(500).json({ error: 'Failed to fetch books.' });
+  }
+});
 
 // POST new user (signup)
 router.post('/', async (req, res) => {

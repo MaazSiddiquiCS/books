@@ -39,4 +39,21 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.post('/addBookmark', async (req, res) => {
+    try {
+        const { user_id, book_id, bookmark_date } = req.body;
+
+        if (!user_id || !book_id || !bookmark_date) {
+            return res.status(400).json({ error: 'User ID, Book ID, and Bookmark Date are required.' });
+        }
+
+        // Call the addBookmark controller
+        const response = await bookmarksController.addBookmark(req.body);
+        res.status(201).json(response);
+    } catch (error) {
+        console.error('Error adding bookmark:', error);
+        res.status(500).json({ error: error.message || 'Failed to add bookmark' });
+    }
+});
+
 module.exports = router;
