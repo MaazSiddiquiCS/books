@@ -23,6 +23,10 @@ const GenreRoute = require('./routes/genre');
 app.use('/genre', GenreRoute);
 const ReviewsRoute = require('./routes/reviews');
 app.use('/reviews', ReviewsRoute);
+const userRoute = require('./routes/user');
+app.use('/user', userRoute);
+const readLaterRoute = require('./routes/readLater');
+app.use('/readLater', readLaterRoute);
 // Default 404 Handler
 app.use((req, res) => {
     res.status(404).send('Route not found');
