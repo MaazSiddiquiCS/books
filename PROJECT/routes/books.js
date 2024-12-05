@@ -7,5 +7,5 @@ router.get('/', booksController.getAllBooks);
 router.get('/bookauthors', booksController.getbookauthors);
 // POST a new book
 router.post('/', booksController.addBook);
-
+router.post('/addBookmark',booksController.addBookmark);
 module.exports = router;

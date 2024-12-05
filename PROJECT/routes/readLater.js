@@ -4,6 +4,6 @@ const read= require('../controllers/readLaterController');
 
 // Routes for signup and login
 router.post('/', read.pushReadLater);
-router.get('/get', read.getReadLater);
+router.get('/', read.getReadLater);
 
 module.exports = router;
