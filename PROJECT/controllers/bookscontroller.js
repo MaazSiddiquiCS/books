@@ -148,4 +148,35 @@ exports.addBookmark = (req, res) => {
         );
     });
 };
+exports.getBookmarks = (user_id, res) => {
+    db.query('SELECT * FROM bookmarks WHERE user_id = ?', [user_id], (err, results) => {
+        if (err) {
+            console.error('Error fetching bookmarks:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch bookmarks' });
+        }
+        res.json(results);
+    });
+};
 
+// Delete a bookmark
+exports.deleteBookmark = (req, res) => {
+    const { userId, bookId } = req.params;
+
+    // Validate input
+    if (!userId || !bookId) {
+        return res.status(400).json({ message: 'User  ID and Book ID are required.' });
+    }
+
+    db.query('DELETE FROM bookmarks WHERE user_id = ? AND book_id = ?', [userId, bookId], (err, results) => {
+        if (err) {
+            console.error('Error deleting bookmark:', err);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Bookmark not found.' });
+        }
+
+        return res.status(200).json({ message: 'Bookmark removed successfully.' });
+    });
+};
