@@ -33,5 +33,17 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Failed to log in user' });
     }
 });
+router.get('/notification', async (req, res) => {
+    try {
+        const user = await userController.getNotificationsByUserId(req.body);
+        res.json(user);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+
+
 
 module.exports = router;
