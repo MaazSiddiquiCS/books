@@ -55,6 +55,15 @@ const BookDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if the user is logged in based on sessionStorage
+  useEffect(() => {
+    const userEmail = sessionStorage.getItem('userEmail');
+    setIsLoggedIn(!!userEmail); // Set logged-in status
+  }, []);
+
+
   const handleAddToReadLater = async () => {
     // Check if bookId is valid (this might be dynamic or passed from props)
     if (!bookId) {
@@ -149,6 +158,7 @@ const BookDetailsPage: React.FC = () => {
     return <div className="min-h-screen flex items-center justify-center text-red-600">{error || 'Book not found'}</div>;
   }
 
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="container mx-auto px-4 py-12">
@@ -235,37 +245,44 @@ const BookDetailsPage: React.FC = () => {
               </div>
               <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col justify-between">
                 <div className="space-y-4">
-                  <button
-                    onClick={handleAddToReadLater}
-                    className="w-full bg-yellow-500 text-white py-3 px-6 rounded-full hover:bg-yellow-600 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                  >
-                    Add to Read Later
-                  </button>
+                <button
+  onClick={handleAddToReadLater}
+  className={`w-full py-3 px-6 rounded-full transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg transform ${
+    isLoggedIn 
+      ? 'bg-yellow-500 text-white hover:bg-yellow-600 hover:shadow-xl hover:-translate-y-1'
+      : 'bg-gray-400 text-gray-300 cursor-not-allowed'
+  }`}
+  disabled={!isLoggedIn}
+>
+  {isLoggedIn ? 'Add to Read Later' : 'Login to Add to Read Later'}
+</button>
                   <button className="w-full bg-red-600 text-white py-3 px-6 rounded-full hover:bg-red-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     <Heart className="w-6 h-6 mr-2" />
                     Favorite
                   </button>
-                  <button
-                    className="w-full bg-blue-500 text-white py-3 px-6 rounded-full hover:bg-blue-600 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                  >
-                    <ShoppingCart className="w-6 h-6 mr-2" />
-                    Add to Cart
-                  </button>
                 </div>
                 <div>
                 <div className="mt-6">
-              <button 
-                onClick={() => {
-                  // First, open the book link in a new tab
-                  window.open(book.links, '_blank');
-              
-                  // Then, add the book to bookmarks
-                  handleAddBookmark();
-                }}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-full hover:bg-lightblue-700 transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                Read Book
-              </button>
+                <button 
+  onClick={() => {
+    if (isLoggedIn) {
+      // Open the book link in a new tab
+      window.open(book.links, '_blank');
+    
+      // Add the book to bookmarks
+      handleAddBookmark();
+    }
+  }}
+  className={`w-full py-3 px-6 rounded-full transition duration-300 flex items-center justify-center text-lg font-semibold shadow-lg transform ${
+    isLoggedIn 
+      ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-xl hover:-translate-y-1' 
+      : 'bg-gray-400 text-gray-300 cursor-not-allowed'
+  }`}
+  disabled={!isLoggedIn}
+>
+  {isLoggedIn ? 'Read Book' : 'Login to Read'}
+</button>
+
             </div>
 </div>
               </div>

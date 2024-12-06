@@ -290,7 +290,52 @@ export const addBookmark = async (bookmarkData: Bookmark) => {
 
   return response.json();
 };
+export const fetchBookmarks = async (userId: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/books/addBookmark/${userId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bookmarks: ${response.statusText}`);
+    }
+    const bookmarks = await response.json();
 
+    // Extract book IDs
+    const bookIds = bookmarks.map((item: { book_id: number }) => item.book_id);
+    console.log('Book IDs:', bookIds); // Log the extracted book IDs
+
+    // Fetch all books with authors
+    const allBooks = await fetchBooksWithAuthors();
+    console.log('All Books:', allBooks); // Log all books fetched
+
+    // Ensure that allBooks contains the expected structure
+    if (!Array.isArray(allBooks) || allBooks.length === 0) {
+      console.warn('No books found in allBooks.');
+      return []; // Return an empty array if no books are found
+    }
+
+    // Filter books matching the "Read Later" book IDs
+    const enrichedBooks = allBooks.filter((book: any) => bookIds.includes(book.book_id)); // Ensure you're using the correct property
+    console.log('Enriched Books:', enrichedBooks); // Log the enriched books
+
+    return enrichedBooks;
+  } catch (error) {
+    console.error('Error fetching bookmarks:', error);
+    throw error;
+  }
+};
+export const deleteBookmark = async (userId: string, bookId: number) => {
+  try {
+      const response = await fetch(`${BASE_URL}/addBookmark/${userId}/${bookId}`, {
+          method: 'DELETE',
+      });
+      if (!response.ok) {
+          throw new Error('Failed to delete bookmark');
+      }
+      return await response.json();
+  } catch (error) {
+      console.error('Error deleting bookmark:', error);
+      throw error;
+  }
+};
 export async function getUserByEmail(email:any) {
   try {
     const response = await fetch(`${BASE_URL}/user`, {
@@ -316,32 +361,70 @@ export async function getUserByEmail(email:any) {
   }
 }
 
+// api.tsx
 export const fetchReadLaterBooks = async (userId: string) => {
   try {
-    // Fetch book IDs for the user's "Read Later" list
-    const response = await fetch(`${BASE_URL}/readLater/${userId}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch 'Read Later' books");
-    }
-    const readLaterBooks = await response.json();
+      const response = await fetch(`http://localhost:5001/readLater/${userId}`);
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const readLaterBooks = await response.json();
+      console.log('Read Later Books:', readLaterBooks); // Log the response
 
-    // Extract book IDs
-    const bookIds = readLaterBooks.map((item: { book_id: number }) => item.book_id);
+      // Check if readLaterBooks is an array and has items
+      if (!Array.isArray(readLaterBooks) || readLaterBooks.length === 0) {
+          console.warn('No read later books found for user:', userId);
+          return []; // Return an empty array if no books are found
+      }
 
-    // Fetch all books with authors
-    const allBooks = await fetchBooksWithAuthors();
+      // Extract book IDs
+      const bookIds = readLaterBooks.map((item: { book_id: number }) => item.book_id);
+      console.log('Book IDs:', bookIds); // Log the extracted book IDs
 
-    // Filter books matching the "Read Later" book IDs
-    const enrichedBooks = allBooks.filter((book: any) => bookIds.includes(book.id));
+      // Fetch all books with authors
+      const allBooks = await fetchBooksWithAuthors();
+      console.log('All Books:', allBooks); // Log all books fetched
 
-    return enrichedBooks;
+      // Ensure that allBooks contains the expected structure
+      if (!Array.isArray(allBooks) || allBooks.length === 0) {
+          console.warn('No books found in allBooks.');
+          return []; // Return an empty array if no books are found
+      }
+
+      // Filter books matching the "Read Later" book IDs
+      const enrichedBooks = allBooks.filter((book: any) => bookIds.includes(book.book_id)); // Ensure you're using the correct property
+      console.log('Enriched Books:', enrichedBooks); // Log the enriched books
+
+      return enrichedBooks;
   } catch (error) {
-    console.error("Error fetching 'Read Later' books:", error);
-    return [];
+      console.error("Error fetching 'Read Later' books:", error);
+      return [];
   }
 };
+export async function getNotificationsByUserId(user_id:string) {
+  try {
+    const response = await fetch(`http://localhost:5001/user/notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', // Specify JSON content type
+      },
+      body: JSON.stringify({ user_id }), // Pass the email in the request body
+    });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to fetch user');
+    }
 
+    const data = await response.json(); // Parse the JSON response
+    console.log('Notifcation:', data);
+    return data; // Return the data for further use
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    alert(error); // Optionally, show an alert for errors
+    return null; // Return null in case of an error
+  }
+}
 
 
 
