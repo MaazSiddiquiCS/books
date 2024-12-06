@@ -6,4 +6,5 @@ const account = require('../controllers/userController');
 router.post('/signup', account.signup);
 router.post('/login', account.login);
 router.post('/',account.getuserbyemail);
+router.post('/notification',account.getNotificationsByUserId);
 module.exports = router;
