@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
+import { getUserByEmail,  getNotificationsByUserId } from '../pages/api';
 
 interface NavbarProps {
   openSidebar: () => void;
@@ -12,6 +13,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   // Check if the user is logged in based on sessionStorage
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
+    console.log(userEmail);
     setIsLoggedIn(!!userEmail); // Set logged-in status
   }, []);
 
@@ -21,6 +23,32 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
     sessionStorage.removeItem('userId'); // Optional: Clear userId
     setIsLoggedIn(false); // Update state
     alert('You have successfully logged out.');
+  };
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  useEffect(() => {
+    const userEmail = sessionStorage.getItem('userEmail');
+    setIsLoggedIn(!!userEmail); // Set logged-in status
+  }, []);
+
+  const fetchNotifications = async () => {
+    const userId = sessionStorage.getItem('userID');
+    console.log(userId);
+    if (!userId) return;
+
+    try {
+      const data = await getNotificationsByUserId(userId); // Use the imported function
+      setNotifications(data); // Store notifications in state
+      setIsNotificationOpen(true); // Open the notification window
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching notifications:', error.message);
+      } else {
+        console.error('Unknown error:', error);
+      }
+      alert('There was an error fetching your notifications. Please try again later.');
+    }
   };
 
   return (
@@ -51,7 +79,8 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
           </div>
         </div>
         <div className="flex items-center">
-          <button
+        <button
+            onClick={fetchNotifications}
             className="flex-shrink-0 relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             <span className="sr-only">View notifications</span>
@@ -75,6 +104,21 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
           )}
         </div>
       </div>
+      {isNotificationOpen && (
+        <div className="absolute top-16 right-4 bg-white shadow-lg p-4 rounded-lg max-w-xs w-full">
+          <h3 className="text-lg font-semibold mb-4">Notifications</h3>
+          {notifications.length > 0 ? (
+            notifications.map((notif, index) => (
+              <div key={index} className="mb-3">
+                <p>{notif.text}</p>
+                <p className="text-sm text-gray-500">{new Date(notif.timestamp).toLocaleString()}</p>
+              </div>
+            ))
+          ) : (
+            <p>No notifications available.</p>
+          )}
+        </div>
+      )}
     </header>
   );
 };

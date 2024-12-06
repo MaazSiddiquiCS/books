@@ -11,8 +11,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Book, label: 'My Library', path: '/my-library' },
-    { icon: ShoppingCart, label: 'Cart', path: '/cart' },
-    { icon: Heart, label: 'Wishlist', path: '/wishlist' },
     { icon: BookmarkPlus, label: 'Read Later', path: '/read-later' },
     { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: HelpCircle, label: 'Help', path: '/help' },
