@@ -36,7 +36,7 @@ const ReadLaterItem: React.FC<{ book: Book; onRemove: (book_id: number) => void 
 const ReadLater: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     const fetchBooks = async () => {
       const userId = sessionStorage.getItem("userID");
@@ -85,6 +85,19 @@ const ReadLater: React.FC = () => {
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     book.authors.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  useEffect(() => {
+    const userEmail = sessionStorage.getItem('userEmail');
+    console.log(userEmail);
+    setIsLoggedIn(!!userEmail); // Set logged-in status
+  }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-xl text-gray-600">Please log in to access your read later list.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -107,7 +120,7 @@ const ReadLater: React.FC = () => {
 
       <div className="space-y-4">
         {filteredBooks.map(book => (
-          <ReadLaterItem key={book.book_id} book={book} onRemove={removeBook} /> // Pass removeBook directly
+          <ReadLaterItem key={book.book_id} book={book} onRemove={removeBook} />
         ))}
       </div>
 
@@ -120,6 +133,6 @@ const ReadLater: React.FC = () => {
       )}
     </div>
   );
-}
+};
 
 export default ReadLater;

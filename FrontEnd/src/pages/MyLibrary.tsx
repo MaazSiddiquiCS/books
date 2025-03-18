@@ -14,6 +14,8 @@ interface Book {
 const MyLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [bookmarks, setBookmarks] = useState<Book[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 
   // Retrieve user ID from session storage
   const getUserId = () => sessionStorage.getItem("userID");
@@ -107,6 +109,20 @@ const MyLibrary: React.FC = () => {
   );
 
   const filteredBookmarks = filterBooks(bookmarks);
+
+  useEffect(() => {
+    const userEmail = sessionStorage.getItem('userEmail');
+    console.log(userEmail);
+    setIsLoggedIn(!!userEmail); // Set logged-in status
+  }, []);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-xl text-gray-600">Please log in to access your read later list.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
