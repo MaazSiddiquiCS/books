@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, Star, BookOpen, TrendingUp, Clock, BookmarkPlus, Heart, Award, Coffee } from 'lucide-react'
 import { fetchBooksWithAuthors } from './api'
 import { Link } from 'react-router-dom'
-
+import Footer from '../components/Footer'
 const BASE_URL = 'http://localhost:5001'
 
 export interface Book {
@@ -15,75 +15,137 @@ export interface Book {
   language: string
   authors: string
   cover: string
-  
+  numdownloads: number
 }
 
 const Carousel: React.FC<{ books: Book[] }> = ({ books }) => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length)
-    }, 5000)
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
+    }, 5000);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [books.length])
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [books.length]);
 
   const resetTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current)
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length)
-    }, 5000)
-  }
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
+    }, 5000);
+  };
 
   return (
-    <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] overflow-hidden rounded-xl shadow-lg mb-8">
+    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden rounded-3xl shadow-xl mb-10 bg-[#f5f1e8]">
+      {/* Bookshelf Background */}
+      <div className="absolute inset-0 flex">
+        {/* Left bookend */}
+        <div className="w-16 h-full bg-gradient-to-r from-[#d4a373] to-[#bc8a5f] border-r-2 border-[#a67c52] shadow-lg"></div>
+        
+        {/* Bookshelf with decorative books */}
+        <div className="flex-1 flex items-end h-full pl-2 pr-4 gap-2">
+          {[...Array(12)].map((_, i) => (
+            <div 
+              key={i}
+              className="h-4/5 w-8 rounded-sm shadow-md"
+              style={{
+                backgroundColor: ['#8d6e63', '#a1887f', '#bcaaa4', '#d7ccc8', '#efebe9', '#5d4037', '#4e342e', '#3e2723', '#795548', '#6d4c41'][i % 10],
+                transform: `translateY(${Math.random() * 10}px)`,
+                borderLeft: '1px solid rgba(0,0,0,0.1)'
+              }}
+            />
+          ))}
+        </div>
+        
+        {/* Right bookend */}
+        <div className="w-16 h-full bg-gradient-to-l from-[#d4a373] to-[#bc8a5f] border-l-2 border-[#a67c52] shadow-lg"></div>
+      </div>
+
+      {/* Wooden Shelf Surface */}
+      <div className="absolute bottom-0 w-full h-8 bg-[#bc8a5f] bg-opacity-90">
+        <div className="absolute top-0 w-full h-1 bg-[#d4a373]"></div>
+        <div className="absolute top-1 w-full h-6 bg-gradient-to-b from-[#a67c52] to-[#bc8a5f]"></div>
+        <div className="absolute bottom-0 w-full h-1 bg-[#8b5a2b] shadow-lg"></div>
+      </div>
+
+      {/* Featured Book */}
       {books.map((book, index) => (
         <div
           key={book.id}
-          className={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}
-          style={{
-            backgroundImage: `url(${book.cover})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
+          className={`absolute top-0 left-0 w-full h-full transition-opacity duration-500 ease-in-out ${
+            index === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">{book.title}</h2>
-            <p className="text-lg sm:text-xl text-gray-300 mb-2 sm:mb-4">{book.authors}</p>
+          {/* Book Display */}
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-48 sm:w-56 md:w-64 transform perspective-1000 group">
+            <div className="relative h-full transition-all duration-500 group-hover:scale-105">
+              {/* Book Cover */}
+              <div className="relative h-full bg-white shadow-2xl" style={{
+                transform: 'rotateX(10deg) rotateY(-5deg)',
+                transformStyle: 'preserve-3d'
+              }}>
+                <img
+                  src={book.cover}
+                  alt={book.title}
+                  className="w-full h-full object-cover border-2 border-gray-100"
+                />
+                {/* Book Spine */}
+                <div className="absolute top-0 left-0 h-full w-3 bg-gradient-to-b from-gray-700 via-gray-800 to-gray-900" style={{
+                  transform: 'translateX(-3px) rotateY(90deg) translateZ(-1px)'
+                }} />
+                {/* Pages Edge */}
+                <div className="absolute top-0 right-0 h-full w-2 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300" style={{
+                  transform: 'translateX(2px) rotateY(90deg) translateZ(48px)'
+                }} />
+              </div>
+              {/* Shadow */}
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-4/5 h-4 bg-black/30 blur-md"></div>
+            </div>
+          </div>
+
+          {/* Book Info */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 md:p-14 bg-gradient-to-t from-black/70 to-transparent backdrop-blur-sm rounded-t-xl">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+              {book.title}
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-300 mt-1 sm:mt-2">
+              {book.authors}
+            </p>
             <Link
               to="/ExploreNow"
-              className="inline-block bg-white text-gray-900 px-4 py-2 sm:px-6 sm:py-2 rounded-full text-sm sm:text-base font-semibold hover:bg-gray-200 transition-colors duration-300"
+              className="inline-block mt-4 bg-white text-gray-900 px-6 py-2 rounded-full font-semibold hover:bg-gray-100 transition shadow-lg"
             >
               Explore Now
             </Link>
           </div>
         </div>
       ))}
+
+      {/* Navigation Buttons */}
       <button
-        className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 sm:p-2"
+        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 transition-all shadow-lg hover:scale-110"
         onClick={() => {
-          setCurrentIndex((prevIndex) => (prevIndex - 1 + books.length) % books.length)
-          resetTimer()
+          setCurrentIndex((prevIndex) => (prevIndex - 1 + books.length) % books.length);
+          resetTimer();
         }}
       >
-        <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
+        <ChevronLeft className="w-6 h-6" />
       </button>
       <button
-        className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 sm:p-2"
+        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 transition-all shadow-lg hover:scale-110"
         onClick={() => {
-          setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length)
-          resetTimer()
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % books.length);
+          resetTimer();
         }}
       >
-        <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
+        <ChevronRight className="w-6 h-6" />
       </button>
     </div>
-  )
-}
+  );
+};
 
 export const BookCard: React.FC<{ book: Book }> = ({ book }) => (
   <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl">
@@ -174,14 +236,37 @@ export default function BookDiscovery() {
 
     loadBooks()
   }, [])
+// Helper to shuffle and limit book lists
+const getRandomBooks = (arr: Book[], count: number) => {
+  return arr.sort(() => 0.5 - Math.random()).slice(0, count)
+}
 
-  const featuredBooks = books.slice(0, 5)
-  const newReleases = books.slice(-5)
-  const bestSellers = books.slice(9, 14)
-  const staffPicks = books.slice(15, 20)
-  const TopRated=books.slice(125,130)
-  const Maylike=books.slice(200,205)
-  const PopularBooks=books.slice(205,210)
+const currentYear = new Date().getFullYear()
+
+const featuredBooks = getRandomBooks(books, 10)
+
+
+const newReleases = books
+  .slice() // avoid mutating the original array
+  .sort((a, b) => new Date(b.published_date).getTime() - new Date(a.published_date).getTime())
+  .slice(0, 10); // take top 10 recent releases
+
+
+
+const TopRated = getRandomBooks(
+  books.filter((b) => b.ratings >= 4.8),
+  10
+)
+
+const bestSellers = getRandomBooks(books, 10) // You could add a `sales` property if available
+const staffPicks = getRandomBooks(books, 10)
+const Maylike = getRandomBooks(books, 10)
+const PopularBooks = books
+  .slice()
+  .filter(b => b.numdownloads != null) // safety check
+  .sort((a, b) => b.numdownloads - a.numdownloads)
+  .slice(0, 10); // take top 10 by downloads
+
 
   return (
     <div className="container mx-auto px-4 sm:px-6 md:px-8">
@@ -193,6 +278,7 @@ export default function BookDiscovery() {
       <BookSection title="Popular Books" icon={<BookOpen className="h-6 w-6 text-gray-600" />} books={PopularBooks} />
       <BookSection title="Top Rated" icon={<Star className="h-6 w-6 text-gray-600" />} books={TopRated} />
       <BookSection title="Top Picks for You" icon={<Coffee className="h-6 w-6 text-gray-600" />} books={bestSellers} />
+      <Footer />
     </div>
   )
 }

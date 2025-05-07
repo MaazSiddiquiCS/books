@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User } from 'lucide-react';
 import{getUserByEmail} from 'pages/api'
+import { Result } from 'postcss';
 interface ModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
@@ -55,20 +56,25 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
       const contentType = response.headers.get('Content-Type');
       if (response.ok && contentType && contentType.includes('application/json')) {
         const result = await response.json();
-        alert(isSignup ? 'Signup successful' : 'Login successful');
+        alert(isSignup ? 'Signup successful. Please log in.' : 'Login successful');
         console.log('Server response:', result);
-  
-        // Store email and user ID in sessionStorage on successful login
-        if (!isSignup) {
+        
+        if (isSignup) {
+          // Switch to login mode after successful signup
+          setIsSignup(false);
+          setFormData({ id: '', name: '', email: '', password: '' }); // Clear the form
+        } else {
+          // Store session info on successful login
           sessionStorage.setItem('userEmail', formData.email);
-          const user_id= await getUserByEmail(formData.email);
-      console.log(user_id[0].user_id);
-      sessionStorage.setItem('userID', user_id[0].user_id);
-           // Store the user ID from the server response
+          const user_id = await getUserByEmail(formData.email);
+          console.log(user_id[0].user_id);
+          sessionStorage.setItem('userID', user_id[0].user_id);
+          sessionStorage.setItem('username', result.user.username);
+          console.log(sessionStorage.getItem('username'));
+          window.location.reload();
           displayEmailInModal(formData.email);
+          setIsOpen(false); // Only close on login
         }
-  
-        setIsOpen(false);
       } else {
         const errorText = await response.text();
         console.error('Server error:', errorText);
@@ -135,9 +141,13 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
   // Logout function
   const handleLogout = () => {
     sessionStorage.removeItem('userEmail');
-    sessionStorage.removeItem('userId'); // Remove userId on logout
-    setIsOpen(false);  // Close the modal on logout
+    sessionStorage.removeItem('userId'); 
+    // Remove userId on logout
+    setIsOpen(false); 
+     // Close the modal on logout
+    window.location.reload();
     alert('You have logged out successfully.');
+    
   };
 
   if (!isOpen) return null;

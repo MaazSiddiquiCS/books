@@ -2,7 +2,16 @@ const express = require('express');
 const router = express.Router();
 const reviewsController = require('../controllers/reviewsController');
 
-// GET all books
+// Get all reviews
 router.get('/', reviewsController.getAllReviews);
-router.get('/ratings', reviewsController.getBookratings);
+
+// Get average ratings for books
+router.get('/ratings', reviewsController.getBookRatings);
+
+// Add a new review
+router.post('/', reviewsController.addReview);
+
+// Delete a review by ID
+router.delete('/:review_id', reviewsController.deleteReview);
+
 module.exports = router;

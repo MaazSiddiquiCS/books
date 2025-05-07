@@ -86,3 +86,30 @@ exports.getuserbyemail = (req, res) => {
     res.json(results); // Send the results back
   });
 };
+exports.getNotificationsByUserId = (req, res) => {
+  const { user_id } = req.body; 
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'User ID is required' }); // Handle missing user_id error
+  }
+  db.query('SELECT * FROM notifications WHERE user_id = ? order by notification_id desc', [user_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching notifications by user_id:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No notifications found for this user' }); // Handle case where no notifications are found
+    }
+    res.json(results); // Send the results back (notifications)
+  });
+};
+exports.getAllUsers = (req, res) => {
+  db.query('SELECT * FROM authors', (err, results) => {
+      if (err) {
+          console.error('Error fetching authors:', err.message);
+          return res.status(500).json({ error: 'Failed to fetch authors' });
+      }
+      res.json(results);
+  });
+};

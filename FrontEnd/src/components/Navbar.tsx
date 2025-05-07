@@ -1,5 +1,7 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
+import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
 
 interface NavbarProps {
   openSidebar: () => void;
@@ -8,19 +10,109 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allBooks, setAllBooks] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Check if the user is logged in based on sessionStorage
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
-    setIsLoggedIn(!!userEmail); // Set logged-in status
+    setIsLoggedIn(!!userEmail);
   }, []);
 
-  // Handle logout
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        const books = await fetchBooksWithAuthors();
+        setAllBooks(books);
+      } catch (error) {
+        console.error('Failed to fetch books:', error);
+      }
+    };
+    loadBooks();
+  }, []);
+
+  // Poll for notifications every 10 seconds
+  useEffect(() => {
+    const userId = sessionStorage.getItem('userID');
+    if (!userId || !isLoggedIn) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const data = await getNotificationsByUserId(userId);
+        // Compare notification IDs to detect new ones
+        const currentIds = notifications.map((n) => n.notification_id);
+        const hasNew = data.some((n: { notification_id: any; }) => !currentIds.includes(n.notification_id));
+        setNotifications(data);
+        if (hasNew) {
+          setHasNewNotification(true);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications(); // Initial fetch
+    const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [isLoggedIn, notifications]);
+
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim() !== '') {
+      navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setSuggestions([]);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim() === '') {
+      setSuggestions([]);
+    } else {
+      const filtered = allBooks.filter((book) =>
+        book.title?.toLowerCase().includes(query.toLowerCase())
+      );
+      setSuggestions(filtered.slice(0, 5));
+    }
+  };
+
+  const handleSuggestionClick = (bookId: number) => {
+    navigate(`/BookDetail/${bookId}`);
+    setSearchQuery('');
+    setSuggestions([]);
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem('userEmail');
-    sessionStorage.removeItem('userId'); // Optional: Clear userId
-    setIsLoggedIn(false); // Update state
+    sessionStorage.removeItem('userID');
+    setIsLoggedIn(false);
+    setNotifications([]);
+    setHasNewNotification(false);
+    window.location.reload();
     alert('You have successfully logged out.');
+  };
+
+  const toggleNotifications = async () => {
+    if (!isNotificationOpen) {
+      const userId = sessionStorage.getItem('userID');
+      if (!userId) return;
+      try {
+        const data = await getNotificationsByUserId(userId);
+        setNotifications(data);
+      } catch (error: unknown) {
+        console.error('Error fetching notifications:', error);
+        alert('Error fetching notifications. Please try again later.');
+      }
+    }
+    setHasNewNotification(false); // Clear red dot when button is clicked
+    setIsNotificationOpen(!isNotificationOpen);
   };
 
   return (
@@ -32,7 +124,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
         >
           <Menu className="h-6 w-6" />
         </button>
-        <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end">
+        <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end relative">
           <div className="max-w-lg w-full lg:max-w-xs">
             <label htmlFor="search" className="sr-only">
               Search books
@@ -46,17 +138,41 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                 placeholder="Search books"
                 type="search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchSubmit}
               />
+              {suggestions.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {suggestions.map((book) => (
+                    <div
+                      key={book.book_id}
+                      className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSuggestionClick(book.book_id)}
+                    >
+                      <img
+                        src={book.cover || '/default-cover.jpg'}
+                        alt={book.title}
+                        className="w-10 h-14 object-cover mr-3 rounded-sm"
+                      />
+                      <span className="text-sm font-medium text-gray-800 truncate">{book.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="flex items-center">
           <button
-            className="flex-shrink-0 relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+            onClick={toggleNotifications}
+            className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             <span className="sr-only">View notifications</span>
             <Bell className="h-6 w-6" />
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+            {hasNewNotification && (
+              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+            )}
           </button>
           {isLoggedIn ? (
             <button
@@ -75,6 +191,27 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
           )}
         </div>
       </div>
+      {isNotificationOpen && (
+        <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg z-20 border border-gray-200 max-h-80 overflow-y-auto">
+          <div className="p-4 sticky top-0 bg-white z-10 border-b">
+            <h3 className="text-lg font-semibold">Notifications</h3>
+          </div>
+          <div className="px-4 pb-4">
+            {notifications.length > 0 ? (
+              notifications.map((notif, index) => (
+                <div key={index} className="mb-3 border-b pb-2 last:border-b-0">
+                  <p className="text-sm text-gray-700">{notif.text}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(notif.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No notifications available.</p>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

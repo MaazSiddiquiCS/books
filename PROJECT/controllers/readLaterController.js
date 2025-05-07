@@ -1,13 +1,14 @@
 const db = require('../db/connection');
 
+
 // Get all books
-exports.getReadLater = (req, res) => {
-    db.query(`SELECT book_id FROM readlater WHERE user_id = ?`,
-      [user_id], (err, results) => {
+exports.getReadLater = (user_id, res) => {
+    db.query(`SELECT book_id FROM readlater WHERE user_id = ?`, [user_id], (err, results) => {
         if (err) {
             console.error('Error fetching authors:', err.message);
             return res.status(500).json({ error: 'Failed to fetch authors' });
         }
+        // Send response only once
         res.json(results);
     });
 };
@@ -51,5 +52,27 @@ exports.pushReadLater = (req, res) => {
         });
       }
     );
+  });
+};
+exports.deleteReadLaterBook = (req, res) => {
+  const { userId, bookId } = req.params;
+
+  // Validate input
+  if (!userId || !bookId) {
+      return res.status(400).json({ message: 'User  ID and Book ID are required.' });
+  }
+
+  // Perform the delete operation
+  db.query('DELETE FROM readlater WHERE user_id = ? AND book_id = ?', [userId, bookId], (err, results) => {
+      if (err) {
+          console.error('Error deleting book from Read Later:', err);
+          return res.status(500).json({ message: 'Internal server error.' });
+      }
+
+      if (results.affectedRows === 0) {
+          return res.status(404).json({ message: 'Book not found in Read Later list.' });
+      }
+
+      return res.status(200).json({ message: 'Book removed from Read Later list.' });
   });
 };

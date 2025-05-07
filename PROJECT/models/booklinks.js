@@ -13,6 +13,15 @@ router.get('/', async (req, res) => {
 });
 router.get('/', async (req, res) => {
     try {
+        const links = await booklinksController.getBookContent();
+        res.json(links);
+    } catch (error) {
+        console.error('Error fetching links:', error);
+        res.status(500).json({ error: 'Failed to fetch links' });
+    }
+});
+router.get('/', async (req, res) => {
+    try {
         const cover = await booklinksController.getbookcover();
         res.json(cover);
     } catch (error) {

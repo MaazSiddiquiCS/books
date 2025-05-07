@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import {Book} from './Home'
 // Define the Book interface
 
-interface Genre {
+export interface Genre {
   genre_id: number;
   genre_name: string;
 }

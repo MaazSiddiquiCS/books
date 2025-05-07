@@ -46,14 +46,13 @@ exports.getbookauthors = (req, res) => {
 // Add a new book
 // Add a new book
 exports.addBook = (req, res) => {
-    const { book_id, published_date, language, id, title, author_id, genre_id, publisher_id } = req.body;
+    const { book_id, published_date, language, id, title, author_id, genre_id, publisher_id, link, type_id, link_id } = req.body;
 
     // Validate all required fields
-    if (!book_id || !published_date || !language || !title || !author_id || !genre_id || !publisher_id) {
-        return res.status(400).json({ error: 'All fields are required' });
+    if (!book_id || !published_date || !language || !title || !author_id || !genre_id || !publisher_id || !link || !type_id) {
+        return res.status(400).json({ error: 'All fields are required including link and type_id' });
     }
 
-    // Insert the book into the 'books' table
     db.query(
         'INSERT INTO books (book_id, published_date, language) VALUES (?, ?, ?)',
         [book_id, published_date, language],
@@ -63,42 +62,51 @@ exports.addBook = (req, res) => {
                 return res.status(500).json({ error: 'Failed to add book' });
             }
 
-            console.log('Inserted Book ID:', book_id); // This is the book_id provided in the request
+            console.log('Inserted Book ID:', book_id);
 
-            // Insert related data into 'booktitles' using book_id
             db.query(
                 'INSERT INTO booktitles (id, Book_id, title) VALUES (?, ?, ?)',
-                [id, book_id, title], // Use book_id instead of insertedBookId
+                [id, book_id, title],
                 (err, results) => {
                     if (err) {
                         console.error('Error adding book title:', err);
                         return res.status(500).json({ error: 'Failed to add book title', details: err.message });
                     }
 
-                    // Insert book genre into 'book_genre'
                     db.query(
                         'INSERT INTO book_genre (Book_id, genre_id) VALUES (?, ?)',
-                        [book_id, genre_id], // Use book_id instead of insertedBookId
+                        [book_id, genre_id],
                         (err, results) => {
                             if (err) {
                                 console.error('Error adding book genre:', err.message);
                                 return res.status(500).json({ error: 'Failed to add book genre' });
                             }
 
-                            // Insert book publisher into 'book_publisher'
                             db.query(
                                 'INSERT INTO book_publisher (Book_id, publisher_id) VALUES (?, ?)',
-                                [book_id, publisher_id], // Use book_id instead of insertedBookId
+                                [book_id, publisher_id],
                                 (err, results) => {
                                     if (err) {
                                         console.error('Error adding book publisher:', err.message);
                                         return res.status(500).json({ error: 'Failed to add book publisher' });
                                     }
 
-                                    res.status(201).json({
-                                        message: 'Book added successfully',
-                                        bookId: book_id // Return the book_id provided in the request
-                                    });
+                                    // Insert into booklinks
+                                    db.query(
+                                        'INSERT INTO booklinks (Book_id, Link, type_id, Link_id) VALUES (?, ?, ?, ?)',
+                                        [book_id, link, type_id, link_id],
+                                        (err, results) => {
+                                            if (err) {
+                                                console.error('Error adding book link:', err.message);
+                                                return res.status(500).json({ error: 'Failed to add book link' });
+                                            }
+
+                                            res.status(201).json({
+                                                message: 'Book added successfully with link',
+                                                bookId: book_id
+                                            });
+                                        }
+                                    );
                                 }
                             );
                         }
@@ -108,6 +116,7 @@ exports.addBook = (req, res) => {
         }
     );
 };
+
 
 exports.addBookmark = (req, res) => {
     const { user_id, book_id, bookmark_date } = req.body;
@@ -148,4 +157,35 @@ exports.addBookmark = (req, res) => {
         );
     });
 };
+exports.getBookmarks = (user_id, res) => {
+    db.query('SELECT * FROM bookmarks WHERE user_id = ?', [user_id], (err, results) => {
+        if (err) {
+            console.error('Error fetching bookmarks:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch bookmarks' });
+        }
+        res.json(results);
+    });
+};
 
+// Delete a bookmark
+exports.deleteBookmark = (req, res) => {
+    const { userId, bookId } = req.params;
+
+    // Validate input
+    if (!userId || !bookId) {
+        return res.status(400).json({ message: 'User  ID and Book ID are required.' });
+    }
+
+    db.query('DELETE FROM bookmarks WHERE user_id = ? AND book_id = ?', [userId, bookId], (err, results) => {
+        if (err) {
+            console.error('Error deleting bookmark:', err);
+            return res.status(500).json({ message: 'Internal server error.' });
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Bookmark not found.' });
+        }
+
+        return res.status(200).json({ message: 'Bookmark removed successfully.' });
+    });
+};

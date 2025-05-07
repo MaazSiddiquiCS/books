@@ -27,6 +27,12 @@ const userRoute = require('./routes/user');
 app.use('/user', userRoute);
 const readLaterRoute = require('./routes/readLater');
 app.use('/readLater', readLaterRoute);
+const BookmarkRoute = require('./routes/bookmarks');
+app.use('/bookmarks', BookmarkRoute);
+const downloadRoutes = require('./routes/download');
+app.use('/download', downloadRoutes);
+const adminRoutes = require('./routes/admin');
+app.use('/admin', adminRoutes);
 // Default 404 Handler
 app.use((req, res) => {
     res.status(404).send('Route not found');

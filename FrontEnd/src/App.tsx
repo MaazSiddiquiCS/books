@@ -13,6 +13,10 @@ import Help from './pages/Help';
 import LoginModal from './components/LoginModal';
 import ExploreNow from 'pages/ExploreNow';
 import BookDetail from 'pages/BookDetails';
+import Search from 'components/Search';
+import ReaderPage from 'pages/ReaderPage';
+import DownloadPage from 'pages/DownloadPage';
+import Admin from 'pages/Admin';
 
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,6 +43,12 @@ const App: React.FC = () => {
                 <Route path="/help" element={<Help />} />
                 <Route path="/ExploreNow" element={<ExploreNow />} />
                 <Route path="/BookDetail/:id" element={<BookDetail />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/reader/:id" element={<ReaderPage />} /> 
+                <Route path="/footer" element={<Footer />} />
+                <Route path="/download/:id" element={<DownloadPage />} />
+                <Route path="/admin/" element={<Admin />} />            
               </Routes>
             </div>
           </main>
