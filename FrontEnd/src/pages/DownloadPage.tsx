@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, ArrowLeft } from 'lucide-react';
 import { fetchBookDetails } from './api';
+import Payment from '../components/Payment';
 
 const BASE_URL = 'http://localhost:5001';
 
@@ -13,6 +14,8 @@ const DownloadPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'epub'>('pdf');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,39 +44,32 @@ const DownloadPage: React.FC = () => {
       alert('Please log in to download');
       return;
     }
-  
+
+    // Optionally show payment for all downloads (remove this if you want to keep free downloads)
+    setSelectedFormat(format);
+    setShowPayment(true);
+  };
+
+  const proceedWithDownload = async (format: 'pdf' | 'epub') => {
     try {
       setLoading(true);
       setDownloadProgress(0);
       
-      // Create a progress callback
-      const onDownloadProgress = (progressEvent: ProgressEvent) => {
-        if (progressEvent.lengthComputable) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setDownloadProgress(percentCompleted);
-        }
-      };
-
-      // Create a blob with the response
       const response = await fetch(`${BASE_URL}/download/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          user_id: userId, 
+          user_id: sessionStorage.getItem('userID'), 
           book_id: bookId, 
           format 
         })
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      if (!response.ok) throw new Error(await response.text());
 
-      // Get the blob from the response
       const blob = await response.blob();
       setDownloadProgress(100);
       
-      // Create download link and trigger click
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -81,7 +77,6 @@ const DownloadPage: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
@@ -95,7 +90,12 @@ const DownloadPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    proceedWithDownload(selectedFormat);
+  };
+
+  if (loading && !showPayment) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -182,6 +182,20 @@ const DownloadPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPayment && bookId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <Payment
+              book_id={bookId}
+              bookTitle={book.bookdetail?.title || 'Unknown Book'}
+              price={1.99} // Fixed price for all downloads
+              onPaymentSuccess={handlePaymentSuccess}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

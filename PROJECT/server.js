@@ -33,6 +33,8 @@ const downloadRoutes = require('./routes/download');
 app.use('/download', downloadRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/admin', adminRoutes);
+const paymentRoutes = require('./routes/payment');
+app.use('/payments', paymentRoutes);
 // Default 404 Handler
 app.use((req, res) => {
     res.status(404).send('Route not found');
