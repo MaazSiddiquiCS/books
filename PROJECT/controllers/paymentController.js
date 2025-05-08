@@ -1,35 +1,32 @@
 const db = require('../db/connection');
 
 // Create a new payment
-// In your paymentController.js
 exports.createPayment = (req, res) => {
-    const { user_id, payment_date, method, book_id, amount } = req.body;
-  
-    // Validate required fields
-    if (!user_id || !payment_date || !method || !book_id || !amount) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-  
-    // Insert the new payment
-    db.execute(
-      `INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [user_id, payment_date, method, book_id, amount],
-      (error, results) => {
-        if (error) {
-          console.error('Error creating payment:', error);
-          return res.status(500).json({ error: 'Error creating payment', details: error.message });
-        }
-  
-        res.status(201).json({ 
-          message: 'Payment created successfully',
-          payment_id: results.insertId 
-        });
-      }
-    );
-  };
+  const { user_id, payment_date, method, book_id, amount } = req.body;
 
-// Get all payments for a user
+  if (!user_id || !payment_date || !method || !book_id || !amount) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const insertQuery = `
+    INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.execute(insertQuery, [user_id, payment_date, method, book_id, amount], (error, results) => {
+    if (error) {
+      console.error('Error creating payment:', error);
+      return res.status(500).json({ error: 'Error creating payment', details: error.message });
+    }
+
+    res.status(201).json({
+      message: 'Payment created successfully',
+      payment_id: results.insertId
+    });
+  });
+};
+
+// Get all payments by user ID
 exports.getPaymentsByUserId = (req, res) => {
   const { user_id } = req.params;
 
@@ -37,21 +34,23 @@ exports.getPaymentsByUserId = (req, res) => {
     return res.status(400).json({ error: 'User ID is required' });
   }
 
-  db.query(
-    'SELECT * FROM Payment WHERE user_id = ? ORDER BY payment_date DESC',
-    [user_id],
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching payments:', err.message);
-        return res.status(500).json({ error: 'Failed to fetch payments' });
-      }
+  const selectQuery = `
+    SELECT * FROM payment 
+    WHERE user_id = ? 
+    ORDER BY payment_date DESC
+  `;
 
-      res.json(results);
+  db.query(selectQuery, [user_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching payments:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch payments' });
     }
-  );
+
+    res.json(results);
+  });
 };
 
-// Get payment by ID
+// Get payment by payment ID
 exports.getPaymentById = (req, res) => {
   const { payment_id } = req.params;
 
@@ -59,22 +58,20 @@ exports.getPaymentById = (req, res) => {
     return res.status(400).json({ error: 'Payment ID is required' });
   }
 
-  db.query(
-    'SELECT * FROM payment WHERE payment_id = ?',
-    [payment_id],
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching payment:', err.message);
-        return res.status(500).json({ error: 'Failed to fetch payment' });
-      }
+  const selectQuery = `SELECT * FROM payment WHERE payment_id = ?`;
 
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Payment not found' });
-      }
-
-      res.json(results[0]);
+  db.query(selectQuery, [payment_id], (err, results) => {
+    if (err) {
+      console.error('Error fetching payment:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch payment' });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json(results[0]);
+  });
 };
 
 // Update payment method
@@ -83,25 +80,27 @@ exports.updatePaymentMethod = (req, res) => {
   const { method } = req.body;
 
   if (!payment_id || !method) {
-    return res.status(400).json({ error: 'Payment ID and method are required' });
+    return res.status(400).json({ error: 'Payment ID and new method are required' });
   }
 
-  db.execute(
-    'UPDATE payment SET method = ? WHERE payment_id = ?',
-    [method, payment_id],
-    (error, results) => {
-      if (error) {
-        console.error('Error updating payment:', error);
-        return res.status(500).json({ error: 'Error updating payment', details: error.message });
-      }
+  const updateQuery = `
+    UPDATE payment 
+    SET method = ? 
+    WHERE payment_id = ?
+  `;
 
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ error: 'Payment not found' });
-      }
-
-      res.json({ message: 'Payment updated successfully' });
+  db.execute(updateQuery, [method, payment_id], (error, results) => {
+    if (error) {
+      console.error('Error updating payment method:', error.message);
+      return res.status(500).json({ error: 'Error updating payment method' });
     }
-  );
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({ message: 'Payment method updated successfully' });
+  });
 };
 
 // Delete a payment
@@ -112,20 +111,18 @@ exports.deletePayment = (req, res) => {
     return res.status(400).json({ error: 'Payment ID is required' });
   }
 
-  db.execute(
-    'DELETE FROM payment WHERE payment_id = ?',
-    [payment_id],
-    (error, results) => {
-      if (error) {
-        console.error('Error deleting payment:', error);
-        return res.status(500).json({ error: 'Error deleting payment', details: error.message });
-      }
+  const deleteQuery = `DELETE FROM payment WHERE payment_id = ?`;
 
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ error: 'Payment not found' });
-      }
-
-      res.json({ message: 'Payment deleted successfully' });
+  db.execute(deleteQuery, [payment_id], (error, results) => {
+    if (error) {
+      console.error('Error deleting payment:', error.message);
+      return res.status(500).json({ error: 'Error deleting payment' });
     }
-  );
+
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({ message: 'Payment deleted successfully' });
+  });
 };
