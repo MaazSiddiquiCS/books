@@ -12,7 +12,7 @@ exports.createPayment = (req, res) => {
     INSERT INTO payment (payment_id,user_id, payment_date, method, book_id, amount) 
     VALUES (5,?, ?, ?, ?, ?)
 
-  db.execute(insertQuery, [user_id, payment_date, method, book_id, amount], (error, results) => {
+  db.execute(insertQuery, [payment_id,user_id, payment_date, method, book_id, amount], (error, results) => {
     if (error) {
       console.error('Error creating payment:', error);
       return res.status(500).json({ error: 'Error creating payment', details: error.message });
