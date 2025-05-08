@@ -65,7 +65,7 @@ exports.addBook = (req, res) => {
             console.log('Inserted Book ID:', book_id);
 
             db.query(
-                'INSERT INTO booktitles (id, Book_id, title) VALUES (?, ?, ?)',
+                'INSERT INTO booktitles (id, book_id, title) VALUES (?, ?, ?)',
                 [id, book_id, title],
                 (err, results) => {
                     if (err) {
@@ -74,7 +74,7 @@ exports.addBook = (req, res) => {
                     }
 
                     db.query(
-                        'INSERT INTO book_genre (Book_id, genre_id) VALUES (?, ?)',
+                        'INSERT INTO book_genre (book_id, genre_id) VALUES (?, ?)',
                         [book_id, genre_id],
                         (err, results) => {
                             if (err) {
@@ -83,7 +83,7 @@ exports.addBook = (req, res) => {
                             }
 
                             db.query(
-                                'INSERT INTO book_publisher (Book_id, publisher_id) VALUES (?, ?)',
+                                'INSERT INTO book_publisher (book_id, publisher_id) VALUES (?, ?)',
                                 [book_id, publisher_id],
                                 (err, results) => {
                                     if (err) {
@@ -93,7 +93,7 @@ exports.addBook = (req, res) => {
 
                                     // Insert into booklinks
                                     db.query(
-                                        'INSERT INTO booklinks (Book_id, Link, type_id, Link_id) VALUES (?, ?, ?, ?)',
+                                        'INSERT INTO booklinks (book_id, Link, type_id, Link_id) VALUES (?, ?, ?, ?)',
                                         [book_id, link, type_id, link_id],
                                         (err, results) => {
                                             if (err) {
