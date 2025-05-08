@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5001'; // Replace with your backend's base URL
+const BASE_URL = 'https://ebms.up.railway.app'; // Replace with your backend's base URL
 
 // Helper function to handle API responses
 const handleResponse = async (response: any) => {
@@ -79,7 +79,7 @@ export const fetchBooksWithAuthors = async () => {
 };
 
 export const fetchGenres = async ()=> {
-    const response = await fetch('http://localhost:5001/genre'); // Adjust endpoint
+    const response = await fetch('https://ebms.up.railway.app/genre'); // Adjust endpoint
     if (!response.ok) {
       throw new Error('Failed to fetch genres');
     }
@@ -251,7 +251,7 @@ export interface Bookmark {
 }
 // Function to add book to "Read Later" list
 export const pushReadLater = async (readLaterData: ReadLater) => {
-  const response = await fetch('http://localhost:5001/readLater', {
+  const response = await fetch('https://ebms.up.railway.app/readLater', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ export const pushReadLater = async (readLaterData: ReadLater) => {
   return response.json();
 };
 export const addBookmark = async (bookmarkData: Bookmark) => {
-  const response = await fetch('http://localhost:5001/books/addBookmark', {
+  const response = await fetch('https://ebms.up.railway.app/books/addBookmark', {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
@@ -362,7 +362,7 @@ export async function getUserByEmail(email:any) {
 // api.tsx
 export const fetchReadLaterBooks = async (userId: string) => {
   try {
-      const response = await fetch(`http://localhost:5001/readLater/${userId}`);
+      const response = await fetch(`https://ebms.up.railway.app/readLater/${userId}`);
       if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -401,7 +401,7 @@ export const fetchReadLaterBooks = async (userId: string) => {
 };
 export async function getNotificationsByUserId(user_id:string) {
   try {
-    const response = await fetch(`http://localhost:5001/user/notification`, {
+    const response = await fetch(`https://ebms.up.railway.app/user/notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', // Specify JSON content type
