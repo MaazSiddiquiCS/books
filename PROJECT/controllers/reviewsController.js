@@ -4,7 +4,7 @@ const db = require('../db/connection');
 exports.getAllReviews = (req, res) => {
     const { book_id } = req.query; // Fetch book_id from query
     if (!book_id) {
-        return res.status(400).json({ error: 'Book ID is required' });
+        return res.status(400).json({ error: 'book ID is required' });
     }
 
     db.query(
@@ -33,12 +33,12 @@ exports.getAllReviews = (req, res) => {
 
 
 // Fetch average ratings for books
-exports.getBookRatings = (req, res) => {
+exports.getbookRatings = (req, res) => {
     db.query(
         `SELECT b.book_id, ROUND(AVG(r.rating), 1) AS ratings
          FROM reviews r
          JOIN book_reviews br ON r.review_id = br.review_id
-         JOIN Books b ON br.book_id = b.book_id
+         JOIN books b ON br.book_id = b.book_id
          GROUP BY b.book_id`,
         (err, results) => {
             if (err) {
