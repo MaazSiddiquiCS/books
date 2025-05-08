@@ -3,7 +3,7 @@ import { BookOpen, Search, Trash2, Bookmark, ChevronDown, ChevronUp } from "luci
 import { fetchBookmarks, deleteBookmark, fetchBookDetails } from "./api";
 import { useParams } from 'react-router-dom';
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'https://ebms.up.railway.app';
 
 interface BookmarkData {
   book_id: number;
