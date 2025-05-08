@@ -45,13 +45,13 @@ export const fetchBooksWithAuthors = async () => {
       const booksResponse = await fetch(`${BASE_URL}/books`);
       const authorsResponse = await fetch(`${BASE_URL}/books/bookauthors`);
       const coversResponse = await fetch(`${BASE_URL}/booklinks/bookcover`);
-      //const ratingResponse= await fetch(`${BASE_URL}/reviews/ratings`);
+      const ratingResponse= await fetch(`${BASE_URL}/reviews/ratings`);
       const downloadsResponse= await fetch(`${BASE_URL}/download/numdownloads`);
 
       const books = await booksResponse.json();
       const authors = await authorsResponse.json();
       const covers = await coversResponse.json();
-     // const ratings = await ratingResponse.json();
+     const ratings = await ratingResponse.json();
       const downloads = await downloadsResponse.json();
       console.log('Downloads',downloads);
       // Log responses to verify structure
@@ -62,13 +62,13 @@ export const fetchBooksWithAuthors = async () => {
 
           // Find the corresponding cover based on book_id
           const bookCover = covers.find((cover: any) => cover.book_id === book.book_id)?.link || null; // Find first cover link or null
-         // const bookrating = ratings.find((rating: any) => rating.book_id === book.book_id)?.ratings || null;
+         const bookrating = ratings.find((rating: any) => rating.book_id === book.book_id)?.ratings || null;
           const downloadnum = downloads.find((download: any) => download.book_id === book.book_id)?.numdownloads || null;
           return {
               ...book,
               authors: bookAuthors,
               cover: bookCover,
-              //ratings:bookrating,
+              ratings:bookrating,
               numdownloads:downloadnum,// Single cover link
           };
       });
