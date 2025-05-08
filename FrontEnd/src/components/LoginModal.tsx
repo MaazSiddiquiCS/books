@@ -36,7 +36,7 @@ const LoginModal: React.FC<ModalProps> = ({ isOpen, setIsOpen }) => {
       return;
     }
   
-    const endpoint = isSignup ? `http://localhost:5001/user/signup` : `http://localhost:5001/user/login`;
+    const endpoint = isSignup ? `https://ebms.up.railway.app/user/signup` : `https://ebms.up.railway.app/user/login`;
   
     // Ensure the correct data is sent
     const data = isSignup
