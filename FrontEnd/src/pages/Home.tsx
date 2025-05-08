@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Star, BookOpen, TrendingUp, Clock, BookmarkP
 import { fetchBooksWithAuthors } from './api'
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
-const BASE_URL = 'http://localhost:5001'
+const BASE_URL = 'https://ebms.up.railway.app'
 
 export interface Book {
   id: number
