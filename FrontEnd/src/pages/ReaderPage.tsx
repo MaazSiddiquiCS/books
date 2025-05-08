@@ -4,7 +4,7 @@ import { fetchBookDetails } from './api';
 import { Bookmark } from 'lucide-react';
 
 import { ArrowLeft, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'https://ebms.up.railway.app';
 interface BookDetails {
   bookdetail: {
     book_id: number;
