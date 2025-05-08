@@ -12,7 +12,7 @@ exports.createPayment = (req, res) => {
   
     // Insert the new payment
     db.execute(
-      `INSERT INTO Payment (user_id, payment_date, method, book_id, amount) 
+      `INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
        VALUES (?, ?, ?, ?, ?)`,
       [user_id, payment_date, method, book_id, amount],
       (error, results) => {
@@ -60,7 +60,7 @@ exports.getPaymentById = (req, res) => {
   }
 
   db.query(
-    'SELECT * FROM Payment WHERE payment_id = ?',
+    'SELECT * FROM payment WHERE payment_id = ?',
     [payment_id],
     (err, results) => {
       if (err) {
@@ -87,7 +87,7 @@ exports.updatePaymentMethod = (req, res) => {
   }
 
   db.execute(
-    'UPDATE Payment SET method = ? WHERE payment_id = ?',
+    'UPDATE payment SET method = ? WHERE payment_id = ?',
     [method, payment_id],
     (error, results) => {
       if (error) {
@@ -113,7 +113,7 @@ exports.deletePayment = (req, res) => {
   }
 
   db.execute(
-    'DELETE FROM Payment WHERE payment_id = ?',
+    'DELETE FROM payment WHERE payment_id = ?',
     [payment_id],
     (error, results) => {
       if (error) {
