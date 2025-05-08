@@ -3,7 +3,7 @@ const router = express.Router();
 const reviewsController = require('../controllers/reviewsController');
 
 // Get all reviews
-router.get('/', reviewsController.getAllReviews);
+router.get('/:book_id', reviewsController.getAllReviews);
 
 // Get average ratings for books
 router.get('/ratings', reviewsController.getBookRatings);
