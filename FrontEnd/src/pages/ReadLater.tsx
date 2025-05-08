@@ -70,7 +70,7 @@ const ReadLater: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5001/readLater/${userId}/${book_id}`, { method: 'DELETE' });
+      const response = await fetch(`https://ebms.up.railway.app/readLater/${userId}/${book_id}`, { method: 'DELETE' });
       if (!response.ok) {
         throw new Error('Failed to delete the book from Read Later');
       }
