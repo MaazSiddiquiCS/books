@@ -4,7 +4,7 @@ import { Download, ArrowLeft } from 'lucide-react';
 import { fetchBookDetails } from './api';
 import Payment from '../components/Payment';
 
-const BASE_URL = 'http://localhost:5001';
+const BASE_URL = 'https://ebms.up.railway.app';
 
 const DownloadPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
