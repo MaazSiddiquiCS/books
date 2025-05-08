@@ -75,14 +75,14 @@ async function fetchAndProcessBook(bookLink, res) {
         // Replace image src
         modifiedContent = modifiedContent.replace(/src="([^"]+\.(jpg|jpeg|png|gif|bmp|svg|webp))"/gi, (match, p1) => {
             const fullImageUrl = basePath + p1;
-            return `src="http://localhost:5001/booklinks/proxy?url=${encodeURIComponent(fullImageUrl)}"`;
+            return `src="https://ebms.up.railway.app/booklinks/proxy?url=${encodeURIComponent(fullImageUrl)}"`;
         });
 
         // Replace other href (like CSS)
         modifiedContent = modifiedContent.replace(/href="([^"]+)"/gi, (match, p1) => {
             if (p1.endsWith('.css') || p1.endsWith('.js')) {
                 const fullAssetUrl = basePath + p1;
-                return `href="http://localhost:5001/booklinks/proxy?url=${encodeURIComponent(fullAssetUrl)}"`;
+                return `href="https://ebms.up.railway.app/booklinks/proxy?url=${encodeURIComponent(fullAssetUrl)}"`;
             }
             return match;
         });
@@ -97,7 +97,7 @@ async function fetchAndProcessBook(bookLink, res) {
 // New function to just send proxy link
 exports.getBookLinkOnly = (req, res) => {
     const { bookId } = req.params;
-    const proxyLink = `http://localhost:5001/booklinks/links/${bookId}`;
+    const proxyLink = `https://ebms.up.railway.app/booklinks/links/${bookId}`;
     res.json({ link: proxyLink });
 };
 
