@@ -6,7 +6,7 @@ const reviewsController = require('../controllers/reviewsController');
 router.get('/', reviewsController.getAllReviews);
 
 // Get average ratings for books
-router.get('/ratings', reviewsController.getBookRatings);
+router.get('/ratings', reviewsController.getbookRatings);
 
 // Add a new review
 router.post('/', reviewsController.addReview);
