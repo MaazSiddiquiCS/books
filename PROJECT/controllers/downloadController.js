@@ -183,7 +183,7 @@ exports.getBookContent = async (bookId, format) => {
       
       try {
         // Use proxy endpoint for HTML content
-        const proxyUrl = `http://localhost:5001/booklinks/links/${bookId}`;
+        const proxyUrl = `https://ebms.up.railway.app/booklinks/links/${bookId}`;
         const response = await axios.get(proxyUrl);
         
         resolve({
@@ -211,7 +211,7 @@ exports.getBookContentRoute = async (req, res) => {
 
 exports.getBookLinkOnly = (req, res) => {
   const { bookId } = req.params;
-  const proxyLink = `http://localhost:5001/booklinks/links/${bookId}`;
+  const proxyLink = `https://ebms.up.railway.app/booklinks/links/${bookId}`;
   res.json({ link: proxyLink });
 };
 
