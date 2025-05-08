@@ -2,16 +2,15 @@ const db = require('../db/connection');
 
 // Create a new payment
 exports.createPayment = (req, res) => {
-  const { user_id, payment_date, method, book_id, amount } = req.body;
+  const { payment_id,user_id, payment_date, method, book_id, amount } = req.body;
 
   if (!user_id || !payment_date || !method || !book_id || !amount) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   const insertQuery = `
-    INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
-    VALUES (?, ?, ?, ?, ?)
-  `;
+    INSERT INTO payment (payment_id,user_id, payment_date, method, book_id, amount) 
+    VALUES (5,?, ?, ?, ?, ?)
 
   db.execute(insertQuery, [user_id, payment_date, method, book_id, amount], (error, results) => {
     if (error) {
