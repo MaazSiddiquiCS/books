@@ -101,7 +101,7 @@ const handleRegister = async () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:5001/admin/register', {
+      const response = await fetch('https://ebms.up.railway.app/admin/register', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ const handleRegister = async () => {
     setError(null);
   
     try {
-      const response = await fetch('http://localhost:5001/admin/login', {
+      const response = await fetch('https://ebms.up.railway.app/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ const handleRegister = async () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5001/books/addBooks', {
+      const response = await fetch('https://ebms.up.railway.app/books/addBooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookForm),
@@ -259,7 +259,7 @@ const handleRegister = async () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5001/user/all');
+      const response = await fetch('https://ebms.up.railway.app/user/all');
       
       if (!response.ok) {
         throw new Error(`Failed to fetch users with status ${response.status}`);
@@ -282,7 +282,7 @@ const handleRegister = async () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5001/download/numdownloads');
+      const response = await fetch('https://ebms.up.railway.app/download/numdownloads');
       
       if (!response.ok) {
         throw new Error(`Failed to fetch downloads with status ${response.status}`);
