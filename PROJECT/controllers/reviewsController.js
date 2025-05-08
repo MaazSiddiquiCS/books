@@ -15,7 +15,7 @@ exports.getAllReviews = (req, res) => {
             r.created_at,
             br.book_id,
             u.username
-         FROM Reviews r 
+         FROM reviews r 
          JOIN book_reviews br ON r.review_id = br.review_id
          JOIN user_reviews ur ON r.review_id = ur.review_id
          JOIN users u ON ur.user_id = u.user_id
@@ -36,7 +36,7 @@ exports.getAllReviews = (req, res) => {
 exports.getBookRatings = (req, res) => {
     db.query(
         `SELECT b.book_id, ROUND(AVG(r.rating), 1) AS ratings
-         FROM Reviews r
+         FROM reviews r
          JOIN Book_reviews br ON r.review_id = br.review_id
          JOIN Books b ON br.book_id = b.book_id
          GROUP BY b.book_id`,
@@ -67,7 +67,7 @@ exports.addReview = (req, res) => {
 
         // Insert into Reviews table
         db.query(
-            `INSERT INTO Reviews (rating, comment, created_at) VALUES (?, ?, NOW())`,
+            `INSERT INTO reviews (rating, comment, created_at) VALUES (?, ?, NOW())`,
             [rating, comment],
             (err, result) => {
                 if (err) {
@@ -149,7 +149,7 @@ exports.deleteReview = (req, res) => {
                     return db.rollback(() => res.status(500).json({ error: 'Failed to delete book review' }));
                 }
 
-                db.query(`DELETE FROM Reviews WHERE review_id = ?`, [review_id], (err, result) => {
+                db.query(`DELETE FROM reviews WHERE review_id = ?`, [review_id], (err, result) => {
                     if (err || result.affectedRows === 0) {
                         console.error('Error deleting review:', err ? err.message : 'Review not found');
                         return db.rollback(() => res.status(500).json({ error: err ? 'Failed to delete review' : 'Review not found' }));
