@@ -37,7 +37,7 @@ exports.getBookRatings = (req, res) => {
     db.query(
         `SELECT b.book_id, ROUND(AVG(r.rating), 1) AS ratings
          FROM reviews r
-         JOIN Book_reviews br ON r.review_id = br.review_id
+         JOIN book_reviews br ON r.review_id = br.review_id
          JOIN Books b ON br.book_id = b.book_id
          GROUP BY b.book_id`,
         (err, results) => {
