@@ -31,7 +31,7 @@ const Payment: React.FC<PaymentProps> = ({ book_id, bookTitle, price, onPaymentS
         throw new Error('User not logged in');
       }
 
-      const response = await fetch('http://localhost:5001/payments', {
+      const response = await fetch('https://ebms.up.railway.app/payments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
