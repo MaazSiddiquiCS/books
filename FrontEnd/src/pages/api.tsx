@@ -417,7 +417,6 @@ export async function getNotificationsByUserId(user_id:string) {
     const data = await response.json(); // Parse the JSON response
     return data; // Return the data for further use
   } catch (error) {
-    console.error('Error fetching user:', error);
     // Optionally, show an alert for errors
     return null; // Return null in case of an error
   }
