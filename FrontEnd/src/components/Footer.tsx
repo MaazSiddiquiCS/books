@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-10 sm:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left text-gray-600 text-sm">
-            © 2024 <span className="font-semibold text-gray-800">BookNook</span>. All rights reserved.
+            © 2024 <span className="font-semibold text-gray-800">EBMS</span>. All rights reserved.
           </div>
 
           <div className="flex items-center space-x-6">
