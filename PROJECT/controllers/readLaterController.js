@@ -23,6 +23,9 @@ exports.pushReadLater = (req, res) => {
     return res.status(400).json({ error: 'User ID and Book ID are required' });
   }
 
+  // Convert ISO date to MySQL datetime format
+  const mysqlDate = addedAt ? new Date(addedAt).toISOString().slice(0, 19).replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
+
   // First, check if the book is already in the user's read later list
   db.execute('SELECT * FROM readlater WHERE user_id = ? AND book_id = ?', [userId, bookId], (error, rows) => {
     if (error) {
@@ -38,17 +41,16 @@ exports.pushReadLater = (req, res) => {
     // Now, insert the book into the read later list
     db.execute(
       `INSERT INTO readlater (user_id, book_id, added_at) VALUES (?, ?, ?)`,
-      [userId, bookId, addedAt],  // Insert with the added_at field
+      [userId, bookId, mysqlDate],  // Use the converted date
       (insertError, insertResult) => {
         if (insertError) {
           console.error('Error inserting into read later list:', insertError);
           return res.status(500).json({ error: 'Error adding book to read later list', details: insertError.message });
         }
 
-        // Return success message and the newly inserted readlater_id
         res.status(201).json({
           message: 'Book added to read later list successfully',
-          readlater_id: insertResult.insertId,  // Return the auto-generated readlater_id
+          readlater_id: insertResult.insertId,
         });
       }
     );
