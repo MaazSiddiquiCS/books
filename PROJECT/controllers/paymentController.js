@@ -3,7 +3,7 @@ const db = require('../db/connection');
 // Create a new payment
 // In your paymentController.js
 exports.createPayment = (req, res) => {
-    const { payment_id,user_id, payment_date, method, book_id, amount } = req.body;
+    const {user_id, payment_date, method, book_id, amount } = req.body;
   
     // Validate required fields
     if (!user_id || !payment_date || !method || !book_id || !amount) {
@@ -12,9 +12,9 @@ exports.createPayment = (req, res) => {
   
     // Insert the new payment
     db.execute(
-      INSERT INTO payment (payment_id,user_id, payment_date, method, book_id, amount) 
-       VALUES (5,?, ?, ?, ?, ?),
-      [payment_id,user_id, payment_date, method, book_id, amount],
+      INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
+       VALUES (?, ?, ?, ?, ?),
+      [user_id, payment_date, method, book_id, amount],
       (error, results) => {
         if (error) {
           console.error('Error creating payment:', error);
@@ -38,7 +38,7 @@ exports.getPaymentsByUserId = (req, res) => {
   }
 
   db.query(
-    'SELECT * FROM Payment WHERE user_id = ? ORDER BY payment_date DESC',
+    'SELECT * FROM payment WHERE user_id = ? ORDER BY payment_date DESC',
     [user_id],
     (err, results) => {
       if (err) {
