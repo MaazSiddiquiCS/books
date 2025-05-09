@@ -418,7 +418,7 @@ export async function getNotificationsByUserId(user_id:string) {
     return data; // Return the data for further use
   } catch (error) {
     console.error('Error fetching user:', error);
-    alert(error); // Optionally, show an alert for errors
+    // Optionally, show an alert for errors
     return null; // Return null in case of an error
   }
 }
