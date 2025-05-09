@@ -51,7 +51,6 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
           setHasNewNotification(true);
         }
       } catch (error) {
-        console.error('Error fetching notifications:', error);
       }
     };
 
