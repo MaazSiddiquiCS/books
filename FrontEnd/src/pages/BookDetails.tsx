@@ -260,9 +260,9 @@ const BookDetailsPage: React.FC = () => {
             <div className="mb-8 bg-white p-8 rounded-2xl shadow-lg">
               <h3 className="text-2xl font-semibold mb-4 text-blue-900">Description</h3>
               <p className={`text-blue-800 leading-relaxed ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
-                The book {book.bookdetail.title} written by {book.bookdetail.author} has {book.rating}
-                {isDescriptionExpanded && ' It is hosted on EBMS and is originally published by Gutenberg'}
-              </p>
+  The book <strong>{book.bookdetail.title}</strong> written by <strong>{book.authors}</strong> has a rating of <strong>{book.ratings}</strong>.
+  {isDescriptionExpanded && ' It is hosted on EBMS and is originally published by Gutenberg.'}
+</p>
               <button
                 onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                 className="mt-2 text-blue-600 hover:text-blue-800 transition-colors duration-200 flex items-center"
