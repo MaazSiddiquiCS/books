@@ -3,7 +3,7 @@ const db = require('../db/connection');
 // Create a new payment
 // In your paymentController.js
 exports.createPayment = (req, res) => {
-    const {user_id, payment_date, method, book_id, amount } = req.body;
+    const { user_id, payment_date, method, book_id, amount } = req.body;
   
     // Validate required fields
     if (!user_id || !payment_date || !method || !book_id || !amount) {
@@ -12,8 +12,8 @@ exports.createPayment = (req, res) => {
   
     // Insert the new payment
     db.execute(
-      INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
-       VALUES (?, ?, ?, ?, ?),
+      `INSERT INTO payment (user_id, payment_date, method, book_id, amount) 
+       VALUES (?, ?, ?, ?, ?)`,
       [user_id, payment_date, method, book_id, amount],
       (error, results) => {
         if (error) {
