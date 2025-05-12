@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search, Bell, User, LogOut } from 'lucide-react';
 import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
 
 interface NavbarProps {
@@ -10,6 +10,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -20,7 +21,9 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
 
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
-    setIsLoggedIn(!!userEmail);
+    const adminId = sessionStorage.getItem('adminId');
+    setIsLoggedIn(!!userEmail || !!adminId);
+    setIsAdmin(!!adminId);
   }, []);
 
   useEffect(() => {
@@ -35,30 +38,29 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
     loadBooks();
   }, []);
 
-  // Poll for notifications every 10 seconds
   useEffect(() => {
     const userId = sessionStorage.getItem('userID');
-    if (!userId || !isLoggedIn) return;
+    if (!userId || !isLoggedIn || isAdmin) return;
 
     const fetchNotifications = async () => {
       try {
         const data = await getNotificationsByUserId(userId);
-        // Compare notification IDs to detect new ones
         const currentIds = notifications.map((n) => n.notification_id);
-        const hasNew = data.some((n: { notification_id: any; }) => !currentIds.includes(n.notification_id));
+        const hasNew = data.some((n: { notification_id: any }) => !currentIds.includes(n.notification_id));
         setNotifications(data);
         if (hasNew) {
           setHasNewNotification(true);
         }
       } catch (error) {
+        console.error('Failed to fetch notifications:', error);
       }
     };
 
-    fetchNotifications(); // Initial fetch
-    const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
 
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [isLoggedIn, notifications]);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, notifications, isAdmin]);
 
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
@@ -71,7 +73,6 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-
     if (query.trim() === '') {
       setSuggestions([]);
     } else {
@@ -88,9 +89,55 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
     setSuggestions([]);
   };
 
+  const toggleNotifications = async () => {
+    if (!isNotificationOpen && !isAdmin) {
+      const userId = sessionStorage.getItem('userID');
+      if (!userId) return;
+      try {
+        const data = await getNotificationsByUserId(userId);
+        setNotifications(data);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        alert('Error fetching notifications. Please try again later.');
+      }
+    }
+    setHasNewNotification(false);
+    setIsNotificationOpen(!isNotificationOpen);
+  };
+
+  const handleAdminLogin = async (adminId: string) => {
+    try {
+      const response = await fetch('https://ebms.up.railway.app/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: adminId }),
+      });
+
+      if (!response.ok) throw new Error('Admin login failed');
+
+      const data = await response.json();
+      sessionStorage.setItem('adminId', data.admin.id);
+      sessionStorage.setItem('adminName', data.admin.name);
+      setIsLoggedIn(true);
+      setIsAdmin(true);
+      navigate('/admin');
+    } catch (error) {
+      console.error('Admin login error:', error);
+      alert('Admin login failed. Please check your ID.');
+    }
+  };
+
   const handleLogout = () => {
-    sessionStorage.removeItem('userEmail');
-    sessionStorage.removeItem('userID');
+    if (isAdmin) {
+      sessionStorage.removeItem('adminId');
+      sessionStorage.removeItem('adminName');
+      setIsAdmin(false);
+    } else {
+      sessionStorage.removeItem('userEmail');
+      sessionStorage.removeItem('userID');
+    }
     setIsLoggedIn(false);
     setNotifications([]);
     setHasNewNotification(false);
@@ -98,43 +145,23 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
     alert('You have successfully logged out.');
   };
 
-  const toggleNotifications = async () => {
-    if (!isNotificationOpen) {
-      const userId = sessionStorage.getItem('userID');
-      if (!userId) return;
-      try {
-        const data = await getNotificationsByUserId(userId);
-        setNotifications(data);
-      } catch (error: unknown) {
-        console.error('Error fetching notifications:', error);
-        alert('Error fetching notifications. Please try again later.');
-      }
-    }
-    setHasNewNotification(false); // Clear red dot when button is clicked
-    setIsNotificationOpen(!isNotificationOpen);
-  };
-
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <button
-          onClick={openSidebar}
-          className="lg:hidden text-gray-500 hover:text-gray-700"
-        >
+        <button onClick={openSidebar} className="lg:hidden text-gray-500 hover:text-gray-700">
           <Menu className="h-6 w-6" />
         </button>
+
         <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end relative">
           <div className="max-w-lg w-full lg:max-w-xs">
-            <label htmlFor="search" className="sr-only">
-              Search books
-            </label>
+            <label htmlFor="search" className="sr-only">Search books</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="search"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
                 placeholder="Search books"
                 type="search"
                 value={searchQuery}
@@ -146,15 +173,10 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
                   {suggestions.map((book) => (
                     <div
                       key={book.book_id}
-                      className="flex items-center px-4 py-2 cursor-pointer hover:bg-gray-100"
+                      className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                       onClick={() => handleSuggestionClick(book.book_id)}
                     >
-                      <img
-                        src={book.cover || '/default-cover.jpg'}
-                        alt={book.title}
-                        className="w-10 h-14 object-cover mr-3 rounded-sm"
-                      />
-                      <span className="text-sm font-medium text-gray-800 truncate">{book.title}</span>
+                      {book.title}
                     </div>
                   ))}
                 </div>
@@ -162,55 +184,32 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
             </div>
           </div>
         </div>
-        <div className="flex items-center">
-          <button
-            onClick={toggleNotifications}
-            className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-          >
-            <span className="sr-only">View notifications</span>
-            <Bell className="h-6 w-6" />
-            {hasNewNotification && (
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-            )}
-          </button>
+
+        <div className="flex items-center gap-4">
+          {isLoggedIn && !isAdmin && (
+            <button onClick={toggleNotifications} className="relative text-gray-500 hover:text-gray-700">
+              <Bell className="h-6 w-6" />
+              {hasNewNotification && (
+                <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+              )}
+            </button>
+          )}
+          {isAdmin && (
+            <span className="mr-4 text-sm text-gray-600 flex items-center">
+              <User className="h-4 w-4 mr-1" /> Admin
+            </span>
+          )}
           {isLoggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-            >
-              Logout
+            <button onClick={handleLogout} className="text-gray-500 hover:text-gray-700">
+              <LogOut className="h-6 w-6" />
             </button>
           ) : (
-            <button
-              onClick={openLoginModal}
-              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-            >
-              Login
+            <button onClick={openLoginModal} className="text-sm font-medium text-teal-600 hover:text-teal-800">
+              Log In
             </button>
           )}
         </div>
       </div>
-      {isNotificationOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg z-20 border border-gray-200 max-h-80 overflow-y-auto">
-          <div className="p-4 sticky top-0 bg-white z-10 border-b">
-            <h3 className="text-lg font-semibold">Notifications</h3>
-          </div>
-          <div className="px-4 pb-4">
-            {notifications.length > 0 ? (
-              notifications.map((notif, index) => (
-                <div key={index} className="mb-3 border-b pb-2 last:border-b-0">
-                  <p className="text-sm text-gray-700">{notif.text}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(notif.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No notifications available.</p>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 };
