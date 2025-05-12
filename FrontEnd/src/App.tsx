@@ -17,7 +17,7 @@ import Search from 'components/Search';
 import ReaderPage from 'pages/ReaderPage';
 import DownloadPage from 'pages/DownloadPage';
 import Admin from 'pages/Admin';
-
+import AdminLoginModal from './components/AdminLoginModal';
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -48,7 +48,8 @@ const App: React.FC = () => {
                 <Route path="/reader/:id" element={<ReaderPage />} /> 
                 <Route path="/footer" element={<Footer />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
-                <Route path="/admin/" element={<Admin />} />            
+                <Route path="/admin/" element={<Admin />} />
+                <Route path="/admin/login" element={<AdminLoginModal isOpen={true} setIsOpen={() => {}} />} />
               </Routes>
             </div>
           </main>
