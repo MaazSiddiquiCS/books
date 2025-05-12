@@ -26,15 +26,9 @@ const Admin: React.FC = () => {
     type_id: '1'
   });
 
-  // Check admin authentication on mount
   useEffect(() => {
-    const adminId = sessionStorage.getItem('adminId');
-    if (!adminId) {
-      navigate('/');
-    } else {
-      fetchAllBooks();
-    }
-  }, [navigate]);
+    fetchAllBooks();
+  }, []);
 
   const fetchAllBooks = async () => {
     setLoading(true);
@@ -111,32 +105,19 @@ const Admin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <button
-            onClick={() => {
-              sessionStorage.removeItem('adminId');
-              navigate('/');
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded"
-          >
-            Logout
-          </button>
-        </div>
-
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+        
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
             {error}
           </div>
         )}
 
-        {/* Book Management Section */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <BookOpen className="mr-2" /> Book Management
           </h2>
           
-          {/* Add Book Form */}
           <div className="mb-8">
             <h3 className="text-lg font-medium mb-3 flex items-center">
               <PlusCircle className="mr-1" /> Add New Book
@@ -162,7 +143,27 @@ const Admin: React.FC = () => {
                   placeholder="Enter book title"
                 />
               </div>
-              {/* Add other fields similarly */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Published Date</label>
+                <input
+                  type="date"
+                  value={newBook.published_date}
+                  onChange={(e) => setNewBook({...newBook, published_date: e.target.value})}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Language</label>
+                <select
+                  value={newBook.language}
+                  onChange={(e) => setNewBook({...newBook, language: e.target.value})}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                </select>
+              </div>
             </div>
             <button
               onClick={handleAddBook}
@@ -173,7 +174,6 @@ const Admin: React.FC = () => {
             </button>
           </div>
 
-          {/* Book List */}
           <div>
             <h3 className="text-lg font-medium mb-3">Book List</h3>
             {loading ? (
