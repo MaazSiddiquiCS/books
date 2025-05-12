@@ -189,3 +189,53 @@ exports.deleteBookmark = (req, res) => {
         return res.status(200).json({ message: 'Bookmark removed successfully.' });
     });
 };
+// Add this to your bookcontroller.js
+exports.deleteBook = (req, res) => {
+  const { bookId } = req.params;
+
+  if (!bookId) {
+    return res.status(400).json({ error: 'Book ID is required' });
+  }
+
+  // Start a transaction since we need to delete from multiple tables
+  db.beginTransaction(err => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to start transaction' });
+    }
+
+    // Delete from all related tables first
+    const deleteQueries = [
+      'DELETE FROM booktitles WHERE book_id = ?',
+      'DELETE FROM book_genre WHERE book_id = ?',
+      'DELETE FROM book_publisher WHERE book_id = ?',
+      'DELETE FROM booklinks WHERE book_id = ?',
+      'DELETE FROM authorbooks WHERE book_id = ?',
+      'DELETE FROM books WHERE book_id = ?'
+    ];
+
+    const executeDeletes = (index) => {
+      if (index >= deleteQueries.length) {
+        db.commit(err => {
+          if (err) {
+            return db.rollback(() => {
+              res.status(500).json({ error: 'Failed to commit transaction' });
+            });
+          }
+          res.status(200).json({ message: 'Book deleted successfully' });
+        });
+        return;
+      }
+
+      db.query(deleteQueries[index], [bookId], (err, results) => {
+        if (err) {
+          return db.rollback(() => {
+            res.status(500).json({ error: `Failed to delete book: ${err.message}` });
+          });
+        }
+        executeDeletes(index + 1);
+      });
+    };
+
+    executeDeletes(0);
+  });
+};
