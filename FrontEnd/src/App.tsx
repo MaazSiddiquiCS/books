@@ -21,6 +21,11 @@ import AdminLoginModal from './components/AdminLoginModal';
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const handleAdminLogin = (adminId: string, adminName: string) => {
+    sessionStorage.setItem('adminId', adminId);
+    sessionStorage.setItem('adminName', adminName);
+    navigate('/admin'); // Redirect to admin dashboard after login
+  };
 
   return (
     <Router>
@@ -49,7 +54,16 @@ const App: React.FC = () => {
                 <Route path="/footer" element={<Footer />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
                 <Route path="/admin/" element={<Admin />} />
-                <Route path="/admin/login" element={<AdminLoginModal isOpen={true} setIsOpen={() => {}} />} />
+                      <Route 
+        path="/admin/login" 
+        element={
+          <AdminLoginModal 
+            isOpen={true} 
+            setIsOpen={setIsLoginModalOpen}
+            onAdminLogin={handleAdminLogin}
+          />
+        } 
+      />
               </Routes>
             </div>
           </main>
