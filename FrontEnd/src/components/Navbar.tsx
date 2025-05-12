@@ -1,14 +1,17 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import { Menu, Search, Bell, Shield } from 'lucide-react';
+import { Menu, Search, Bell } from 'lucide-react';
 import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
 
 interface NavbarProps {
   openSidebar: () => void;
   openLoginModal: () => void;
+  openAdminModal: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
+const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminModal }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allBooks, setAllBooks] = useState<any[]>([]);
@@ -16,26 +19,10 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const adminId = sessionStorage.getItem('adminId');
-    setIsAdmin(Boolean(adminId));
-  }, []);
-
-  const handleAdminLogout = () => {
-    sessionStorage.removeItem('adminId');
-    sessionStorage.removeItem('adminName');
-    setIsAdmin(false);
-    window.location.reload();
-  };
 
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
-    setIsLoggedIn(Boolean(userEmail));
+    setIsLoggedIn(!!userEmail);
   }, []);
 
   useEffect(() => {
@@ -71,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
-  }, [isLoggedIn]); // Removed `notifications` dependency to prevent infinite polling
+  }, [isLoggedIn]);
 
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
@@ -95,7 +82,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   };
 
   const handleSuggestionClick = (bookId: number) => {
-    navigate(`/BookDetail/${bookId}`);
+    navigate(`/book-detail/${bookId}`);
     setSearchQuery('');
     setSuggestions([]);
   };
@@ -181,25 +168,16 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             )}
           </button>
-          {isAdmin ? (
-            <>
-              <span className="mr-3 text-sm text-gray-600">Admin</span>
-              <button
-                onClick={handleAdminLogout}
-                className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-              >
-                Admin Logout
-              </button>
-            </>
-          ) : (
+          
+          {location.pathname === '/admin' && !sessionStorage.getItem('adminId') && (
             <button
-              onClick={() => setAdminModalOpen(true)}
-              className="mr-3 px-4 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 flex items-center"
+              onClick={openAdminModal}
+              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
             >
-              <Shield className="h-4 w-4 mr-1" />
-              Admin
+              Admin Login
             </button>
           )}
+
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -217,6 +195,27 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
           )}
         </div>
       </div>
+      {isNotificationOpen && (
+        <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg z-20 border border-gray-200 max-h-80 overflow-y-auto">
+          <div className="p-4 sticky top-0 bg-white z-10 border-b">
+            <h3 className="text-lg font-semibold">Notifications</h3>
+          </div>
+          <div className="px-4 pb-4">
+            {notifications.length > 0 ? (
+              notifications.map((notif, index) => (
+                <div key={index} className="mb-3 border-b pb-2 last:border-b-0">
+                  <p className="text-sm text-gray-700">{notif.text}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(notif.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No notifications available.</p>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
