@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -11,12 +11,12 @@ import ReadLater from './pages/ReadLater';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import LoginModal from './components/LoginModal';
-import ExploreNow from 'pages/ExploreNow';
-import BookDetail from 'pages/BookDetails';
-import Search from 'components/Search';
-import ReaderPage from 'pages/ReaderPage';
-import DownloadPage from 'pages/DownloadPage';
-import Admin from 'pages/Admin';
+import ExploreNow from './pages/ExploreNow';
+import BookDetail from './pages/BookDetails';
+import Search from './components/Search';
+import ReaderPage from './pages/ReaderPage';
+import DownloadPage from './pages/DownloadPage';
+import Admin from './pages/Admin';
 
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -41,26 +41,25 @@ const App: React.FC = () => {
                 <Route path="/read-later" element={<ReadLater />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
-                <Route path="/ExploreNow" element={<ExploreNow />} />
-                <Route path="/BookDetail/:id" element={<BookDetail />} />
-                <Route path="/" element={<Home />} />
+                <Route path="/explore-now" element={<ExploreNow />} />
+                <Route path="/book-detail/:id" element={<BookDetail />} />
                 <Route path="/search" element={<Search />} />
-                <Route path="/reader/:id" element={<ReaderPage />} /> 
-                <Route path="/footer" element={<Footer />} />
+                <Route path="/reader/:id" element={<ReaderPage />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
                 <Route 
-  path="/admin" 
-  element={
-    sessionStorage.getItem('adminId') ? (
-      <Admin />
-    ) : (
-      <Navigate to="/" replace />
-    )
-  } 
-/>           
+                  path="/admin" 
+                  element={
+                    sessionStorage.getItem('adminId') ? (
+                      <Admin />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  } 
+                />
               </Routes>
             </div>
           </main>
+          <Footer />
         </div>
       </div>
       <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen} />
