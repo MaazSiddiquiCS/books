@@ -17,17 +17,9 @@ import Search from 'components/Search';
 import ReaderPage from 'pages/ReaderPage';
 import DownloadPage from 'pages/DownloadPage';
 import Admin from 'pages/Admin';
-import AdminLoginModal from './components/AdminLoginModal';
-import { useNavigate } from 'react-router-dom';
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const navigate = useNavigate(); 
-    const handleAdminLogin = (adminId: string, adminName: string) => {
-    sessionStorage.setItem('adminId', adminId);
-    sessionStorage.setItem('adminName', adminName);
-    navigate('/admin'); // Redirect to admin dashboard after login
-  };
 
   return (
     <Router>
@@ -56,15 +48,6 @@ const App: React.FC = () => {
                 <Route path="/footer" element={<Footer />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
                 <Route path="/admin/" element={<Admin />} />
-                      <Route 
-        path="/admin/login" 
-        element={
-          <AdminLoginModal 
-            isOpen={true} 
-            setIsOpen={setIsLoginModalOpen}
-          />
-        } 
-      />
               </Routes>
             </div>
           </main>
