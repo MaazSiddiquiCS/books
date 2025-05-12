@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -17,10 +17,12 @@ import Search from './components/Search';
 import ReaderPage from './pages/ReaderPage';
 import DownloadPage from './pages/DownloadPage';
 import Admin from './pages/Admin';
+import AdminLoginModal from './components/AdminLoginModal';
 
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   return (
     <Router>
@@ -30,6 +32,7 @@ const App: React.FC = () => {
           <Navbar 
             openSidebar={() => setIsSidebarOpen(true)} 
             openLoginModal={() => setIsLoginModalOpen(true)}
+            openAdminModal={() => setIsAdminModalOpen(true)}
           />
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
             <div className="container mx-auto px-6 py-8">
@@ -46,16 +49,7 @@ const App: React.FC = () => {
                 <Route path="/search" element={<Search />} />
                 <Route path="/reader/:id" element={<ReaderPage />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    sessionStorage.getItem('adminId') ? (
-                      <Admin />
-                    ) : (
-                      <Navigate to="/" replace />
-                    )
-                  } 
-                />
+                <Route path="/admin" element={<Admin />} />
               </Routes>
             </div>
           </main>
@@ -63,6 +57,11 @@ const App: React.FC = () => {
         </div>
       </div>
       <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen} />
+      <AdminLoginModal 
+        isOpen={isAdminModalOpen} 
+        setIsOpen={setIsAdminModalOpen}
+        onAdminLogin={() => setIsAdminModalOpen(false)}
+      />
     </Router>
   );
 }
