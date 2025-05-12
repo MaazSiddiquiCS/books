@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
 import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
-
+import { Shield } from 'lucide-react';
 interface NavbarProps {
   openSidebar: () => void;
   openLoginModal: () => void;
@@ -17,6 +17,20 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+const [adminModalOpen, setAdminModalOpen] = useState(false);
+
+// Add this useEffect to check admin status
+useEffect(() => {
+  const adminId = sessionStorage.getItem('adminId');
+  setIsAdmin(!!adminId);
+}, []);
+const handleAdminLogout = () => {
+  sessionStorage.removeItem('adminId');
+  sessionStorage.removeItem('adminName');
+  setIsAdmin(false);
+  window.location.reload();
+};
 
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
@@ -173,6 +187,25 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             )}
           </button>
+          {isAdmin ? (
+    <>
+      <span className="mr-3 text-sm text-gray-600">Admin</span>
+      <button
+        onClick={handleAdminLogout}
+        className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+      >
+        Admin Logout
+      </button>
+    </>
+  ) : (
+    <button
+      onClick={() => setAdminModalOpen(true)}
+      className="mr-3 px-4 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 flex items-center"
+    >
+      <Shield className="h-4 w-4 mr-1" />
+      Admin
+    </button>
+  )}
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -210,6 +243,14 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
             )}
           </div>
         </div>
+      <AdminLoginModal 
+  isOpen={adminModalOpen}
+  setIsOpen={setAdminModalOpen}
+  onAdminLogin={() => {
+    setIsAdmin(true);
+    setAdminModalOpen(false);
+  }}
+/>
       )}
     </header>
   );
