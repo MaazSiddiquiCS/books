@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Edit, BookOpen, PlusCircle, Users, Download, LogOut } from 'lucide-react';
+import { Trash2, Edit, BookOpen, PlusCircle, Users, Download, LogOut, X, Lock, User } from 'lucide-react';
 
 interface Book {
   book_id: string;
@@ -23,6 +23,7 @@ const Admin: React.FC = () => {
   const [error, setError] = useState('');
   const [showUsers, setShowUsers] = useState(false);
   const [showDownloads, setShowDownloads] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   const [newBook, setNewBook] = useState({
     book_id: '',
@@ -36,16 +37,85 @@ const Admin: React.FC = () => {
     type_id: '1'
   });
 
+  const [loginForm, setLoginForm] = useState({
+    id: '',
+    password: ''
+  });
+  const [isRegister, setIsRegister] = useState(false);
+
   const adminId = sessionStorage.getItem('adminId');
   const adminName = sessionStorage.getItem('adminName');
 
   useEffect(() => {
-    if (!adminId) {
+    // Only show login modal if not logged in and on /admin route
+    if (!adminId && window.location.pathname === '/admin') {
+      setShowLoginModal(true);
+    } else if (!adminId) {
       navigate('/');
     } else {
       fetchAllBooks();
     }
   }, [adminId, navigate]);
+
+  const handleLoginInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const endpoint = isRegister 
+      ? 'https://ebms.up.railway.app/admin/register'
+      : 'https://ebms.up.railway.app/admin/login';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: loginForm.id,
+          ...(isRegister && { 
+            name: `Admin-${loginForm.id}`,
+            role: 'admin',
+            logged_in: new Date().toISOString()
+          }),
+          ...(!isRegister && { password: loginForm.password })
+        }),
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      if (isRegister) {
+        alert(`Admin registered successfully! ID: ${data.id || data.admin?.id}`);
+        setIsRegister(false);
+      } else {
+        const adminId = data.id || data.admin?.id;
+        const adminName = data.name || data.admin?.name || `Admin-${adminId}`;
+        
+        sessionStorage.setItem('adminId', adminId);
+        sessionStorage.setItem('adminName', adminName);
+        setShowLoginModal(false);
+        navigate('/admin');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAllBooks = async () => {
     setLoading(true);
@@ -155,6 +225,83 @@ const Admin: React.FC = () => {
     navigate('/');
   };
 
+  // Admin Login Modal
+  const AdminLoginModal = () => {
+    if (!showLoginModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-md shadow-lg w-96 p-6 relative">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {isRegister ? 'Register Admin' : 'Admin Login'}
+            </h3>
+            <button 
+              onClick={() => setShowLoginModal(false)} 
+              className="text-gray-500 hover:text-gray-700"
+              disabled={loading}
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {error && <div className="text-red-500 mb-4">{error}</div>}
+
+          <form onSubmit={handleAdminLogin} className="space-y-6">
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                name="id"
+                value={loginForm.id}
+                onChange={handleLoginInputChange}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full"
+                placeholder="Admin ID"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            {!isRegister && (
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="password"
+                  name="password"
+                  value={loginForm.password}
+                  onChange={handleLoginInputChange}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full"
+                  placeholder="Password"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : isRegister ? 'Register' : 'Login'}
+            </button>
+
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                className="text-blue-600 hover:underline"
+                disabled={loading}
+              >
+                {isRegister ? 'Already have an account? Login' : 'Need an admin account? Register'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   if (!adminId) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
@@ -162,18 +309,26 @@ const Admin: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Welcome to EBMS Admin Portal</h1>
           <p className="text-gray-600 mb-8">Please login to access the admin dashboard</p>
           <button
+            onClick={() => setShowLoginModal(true)}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition mb-4"
+          >
+            Admin Login
+          </button>
+          <button
             onClick={() => navigate('/')}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
+            className="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition"
           >
             Go to Home Page
           </button>
         </div>
+        <AdminLoginModal />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <AdminLoginModal />
       <div className="max-w-7xl mx-auto">
         {/* Admin Header */}
         <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-md">
