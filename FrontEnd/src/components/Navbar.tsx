@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import { Menu, Search, Bell } from 'lucide-react';
 import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
@@ -6,12 +6,9 @@ import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from 
 interface NavbarProps {
   openSidebar: () => void;
   openLoginModal: () => void;
-  openAdminModal: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminModal }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allBooks, setAllBooks] = useState<any[]>([]);
@@ -19,6 +16,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
@@ -37,6 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
     loadBooks();
   }, []);
 
+  // Poll for notifications every 10 seconds
   useEffect(() => {
     const userId = sessionStorage.getItem('userID');
     if (!userId || !isLoggedIn) return;
@@ -44,21 +43,22 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
     const fetchNotifications = async () => {
       try {
         const data = await getNotificationsByUserId(userId);
+        // Compare notification IDs to detect new ones
         const currentIds = notifications.map((n) => n.notification_id);
-        const hasNew = data.some((n: any) => !currentIds.includes(n.notification_id));
+        const hasNew = data.some((n: { notification_id: any; }) => !currentIds.includes(n.notification_id));
         setNotifications(data);
         if (hasNew) {
           setHasNewNotification(true);
         }
       } catch (error) {
-        console.error('Error fetching notifications:', error);
       }
     };
 
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
-    return () => clearInterval(interval);
-  }, [isLoggedIn]);
+    fetchNotifications(); // Initial fetch
+    const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [isLoggedIn, notifications]);
 
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
@@ -71,6 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
+
     if (query.trim() === '') {
       setSuggestions([]);
     } else {
@@ -82,7 +83,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
   };
 
   const handleSuggestionClick = (bookId: number) => {
-    navigate(`/book-detail/${bookId}`);
+    navigate(`/BookDetail/${bookId}`);
     setSearchQuery('');
     setSuggestions([]);
   };
@@ -101,28 +102,32 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
     if (!isNotificationOpen) {
       const userId = sessionStorage.getItem('userID');
       if (!userId) return;
-
       try {
         const data = await getNotificationsByUserId(userId);
         setNotifications(data);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching notifications:', error);
         alert('Error fetching notifications. Please try again later.');
       }
     }
-    setHasNewNotification(false);
+    setHasNewNotification(false); // Clear red dot when button is clicked
     setIsNotificationOpen(!isNotificationOpen);
   };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <button onClick={openSidebar} className="lg:hidden text-gray-500 hover:text-gray-700">
+        <button
+          onClick={openSidebar}
+          className="lg:hidden text-gray-500 hover:text-gray-700"
+        >
           <Menu className="h-6 w-6" />
         </button>
         <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end relative">
           <div className="max-w-lg w-full lg:max-w-xs">
-            <label htmlFor="search" className="sr-only">Search books</label>
+            <label htmlFor="search" className="sr-only">
+              Search books
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -168,16 +173,6 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             )}
           </button>
-          
-          {location.pathname === '/admin' && !sessionStorage.getItem('adminId') && (
-            <button
-              onClick={openAdminModal}
-              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-            >
-              Admin Login
-            </button>
-          )}
-
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -188,7 +183,7 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal, openAdminM
           ) : (
             <button
               onClick={openLoginModal}
-              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
             >
               Login
             </button>
