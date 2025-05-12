@@ -18,9 +18,11 @@ import ReaderPage from 'pages/ReaderPage';
 import DownloadPage from 'pages/DownloadPage';
 import Admin from 'pages/Admin';
 import AdminLoginModal from './components/AdminLoginModal';
+import { useNavigate } from 'react-router-dom';
 const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const navigate = useNavigate(); 
     const handleAdminLogin = (adminId: string, adminName: string) => {
     sessionStorage.setItem('adminId', adminId);
     sessionStorage.setItem('adminName', adminName);
