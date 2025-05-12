@@ -80,7 +80,7 @@ const Admin: React.FC = () => {
           ...(isRegister && { 
             name: `Admin-${loginForm.id}`,
             role: 'admin',
-            logged_in: new Date().toISOString()
+            const logged_in = new Date().toISOString().slice(0, 19).replace('T', ' ');
           }),
           ...(!isRegister && { password: loginForm.password })
         }),
