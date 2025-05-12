@@ -23,4 +23,5 @@ router.get('/addBookmark/:user_id', async (req, res) => {
 
 // Delete a bookmark
 router.delete('addBookmark/:userId/:bookId', booksController.deleteBookmark);
+router.delete('/:bookId', booksController.deleteBook);
 module.exports = router;
