@@ -62,7 +62,6 @@ const App: React.FC = () => {
           <AdminLoginModal 
             isOpen={true} 
             setIsOpen={setIsLoginModalOpen}
-            onAdminLogin={handleAdminLogin}
           />
         } 
       />
