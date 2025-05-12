@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import { Menu, Search, Bell } from 'lucide-react';
+import { Menu, Search, Bell, Shield } from 'lucide-react';
 import { getUserByEmail, getNotificationsByUserId, fetchBooksWithAuthors } from '../pages/api';
-import { Shield } from 'lucide-react';
+
 interface NavbarProps {
   openSidebar: () => void;
   openLoginModal: () => void;
@@ -16,25 +16,26 @@ const Navbar: React.FC<NavbarProps> = ({ openSidebar, openLoginModal }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
-const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
-// Add this useEffect to check admin status
-useEffect(() => {
-  const adminId = sessionStorage.getItem('adminId');
-  setIsAdmin(!!adminId);
-}, []);
-const handleAdminLogout = () => {
-  sessionStorage.removeItem('adminId');
-  sessionStorage.removeItem('adminName');
-  setIsAdmin(false);
-  window.location.reload();
-};
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const adminId = sessionStorage.getItem('adminId');
+    setIsAdmin(Boolean(adminId));
+  }, []);
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem('adminId');
+    sessionStorage.removeItem('adminName');
+    setIsAdmin(false);
+    window.location.reload();
+  };
 
   useEffect(() => {
     const userEmail = sessionStorage.getItem('userEmail');
-    setIsLoggedIn(!!userEmail);
+    setIsLoggedIn(Boolean(userEmail));
   }, []);
 
   useEffect(() => {
@@ -49,7 +50,6 @@ const handleAdminLogout = () => {
     loadBooks();
   }, []);
 
-  // Poll for notifications every 10 seconds
   useEffect(() => {
     const userId = sessionStorage.getItem('userID');
     if (!userId || !isLoggedIn) return;
@@ -57,22 +57,21 @@ const handleAdminLogout = () => {
     const fetchNotifications = async () => {
       try {
         const data = await getNotificationsByUserId(userId);
-        // Compare notification IDs to detect new ones
         const currentIds = notifications.map((n) => n.notification_id);
-        const hasNew = data.some((n: { notification_id: any; }) => !currentIds.includes(n.notification_id));
+        const hasNew = data.some((n: any) => !currentIds.includes(n.notification_id));
         setNotifications(data);
         if (hasNew) {
           setHasNewNotification(true);
         }
       } catch (error) {
+        console.error('Error fetching notifications:', error);
       }
     };
 
-    fetchNotifications(); // Initial fetch
-    const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [isLoggedIn, notifications]);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]); // Removed `notifications` dependency to prevent infinite polling
 
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
@@ -85,7 +84,6 @@ const handleAdminLogout = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-
     if (query.trim() === '') {
       setSuggestions([]);
     } else {
@@ -116,32 +114,28 @@ const handleAdminLogout = () => {
     if (!isNotificationOpen) {
       const userId = sessionStorage.getItem('userID');
       if (!userId) return;
+
       try {
         const data = await getNotificationsByUserId(userId);
         setNotifications(data);
-      } catch (error: unknown) {
+      } catch (error) {
         console.error('Error fetching notifications:', error);
         alert('Error fetching notifications. Please try again later.');
       }
     }
-    setHasNewNotification(false); // Clear red dot when button is clicked
+    setHasNewNotification(false);
     setIsNotificationOpen(!isNotificationOpen);
   };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <button
-          onClick={openSidebar}
-          className="lg:hidden text-gray-500 hover:text-gray-700"
-        >
+        <button onClick={openSidebar} className="lg:hidden text-gray-500 hover:text-gray-700">
           <Menu className="h-6 w-6" />
         </button>
         <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end relative">
           <div className="max-w-lg w-full lg:max-w-xs">
-            <label htmlFor="search" className="sr-only">
-              Search books
-            </label>
+            <label htmlFor="search" className="sr-only">Search books</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -188,24 +182,24 @@ const handleAdminLogout = () => {
             )}
           </button>
           {isAdmin ? (
-    <>
-      <span className="mr-3 text-sm text-gray-600">Admin</span>
-      <button
-        onClick={handleAdminLogout}
-        className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-      >
-        Admin Logout
-      </button>
-    </>
-  ) : (
-    <button
-      onClick={() => setAdminModalOpen(true)}
-      className="mr-3 px-4 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 flex items-center"
-    >
-      <Shield className="h-4 w-4 mr-1" />
-      Admin
-    </button>
-  )}
+            <>
+              <span className="mr-3 text-sm text-gray-600">Admin</span>
+              <button
+                onClick={handleAdminLogout}
+                className="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                Admin Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setAdminModalOpen(true)}
+              className="mr-3 px-4 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 flex items-center"
+            >
+              <Shield className="h-4 w-4 mr-1" />
+              Admin
+            </button>
+          )}
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
@@ -216,42 +210,13 @@ const handleAdminLogout = () => {
           ) : (
             <button
               onClick={openLoginModal}
-              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
             >
               Login
             </button>
           )}
         </div>
       </div>
-      {isNotificationOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg z-20 border border-gray-200 max-h-80 overflow-y-auto">
-          <div className="p-4 sticky top-0 bg-white z-10 border-b">
-            <h3 className="text-lg font-semibold">Notifications</h3>
-          </div>
-          <div className="px-4 pb-4">
-            {notifications.length > 0 ? (
-              notifications.map((notif, index) => (
-                <div key={index} className="mb-3 border-b pb-2 last:border-b-0">
-                  <p className="text-sm text-gray-700">{notif.text}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(notif.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No notifications available.</p>
-            )}
-          </div>
-        </div>
-      <AdminLoginModal 
-  isOpen={adminModalOpen}
-  setIsOpen={setAdminModalOpen}
-  onAdminLogin={() => {
-    setIsAdmin(true);
-    setAdminModalOpen(false);
-  }}
-/>
-      )}
     </header>
   );
 };
