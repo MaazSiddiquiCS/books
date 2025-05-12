@@ -48,7 +48,16 @@ const App: React.FC = () => {
                 <Route path="/reader/:id" element={<ReaderPage />} /> 
                 <Route path="/footer" element={<Footer />} />
                 <Route path="/download/:id" element={<DownloadPage />} />
-                <Route path="/admin/" element={<Admin />} />            
+                <Route 
+  path="/admin" 
+  element={
+    sessionStorage.getItem('adminId') ? (
+      <Admin />
+    ) : (
+      <Navigate to="/" replace />
+    )
+  } 
+/>           
               </Routes>
             </div>
           </main>
