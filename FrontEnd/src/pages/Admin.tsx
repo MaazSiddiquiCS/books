@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Edit, BookOpen, PlusCircle, Users, Download, Bookmark } from 'lucide-react';
+import { Trash2, Edit, BookOpen, PlusCircle, Users, Download, LogOut } from 'lucide-react';
 
 interface Book {
   book_id: string;
@@ -21,9 +21,9 @@ const Admin: React.FC = () => {
   const [numUsers, setNumUsers] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'books' | 'users' | 'downloads'>('books');
-  const [adminName, setAdminName] = useState('Admin');
-
+  const [showUsers, setShowUsers] = useState(false);
+  const [showDownloads, setShowDownloads] = useState(false);
+  
   const [newBook, setNewBook] = useState({
     book_id: '',
     title: '',
@@ -36,17 +36,16 @@ const Admin: React.FC = () => {
     type_id: '1'
   });
 
+  const adminId = sessionStorage.getItem('adminId');
+  const adminName = sessionStorage.getItem('adminName');
+
   useEffect(() => {
-    const adminId = sessionStorage.getItem('adminId');
-    const storedAdminName = sessionStorage.getItem('adminName');
-    
     if (!adminId) {
       navigate('/');
     } else {
-      if (storedAdminName) setAdminName(storedAdminName);
       fetchAllBooks();
     }
-  }, [navigate]);
+  }, [adminId, navigate]);
 
   const fetchAllBooks = async () => {
     setLoading(true);
@@ -69,7 +68,7 @@ const Admin: React.FC = () => {
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
       setNumUsers(data.length);
-      setActiveTab('users');
+      setShowUsers(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
     } finally {
@@ -84,7 +83,7 @@ const Admin: React.FC = () => {
       if (!response.ok) throw new Error('Failed to fetch downloads');
       const data = await response.json();
       setDownloads(data);
-      setActiveTab('downloads');
+      setShowDownloads(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch downloads');
     } finally {
@@ -156,20 +155,40 @@ const Admin: React.FC = () => {
     navigate('/');
   };
 
+  if (!adminId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">Welcome to EBMS Admin Portal</h1>
+          <p className="text-gray-600 mb-8">Please login to access the admin dashboard</p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
+          >
+            Go to Home Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* Admin Header */}
+        <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-lg shadow-md">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">EBMS Admin Portal</h1>
-            <p className="text-gray-600">Welcome back, {adminName}</p>
+            <h1 className="text-3xl font-bold text-gray-800">EBMS Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">
+              Welcome, <span className="font-semibold text-blue-600">{adminName}</span>
+              <span className="ml-4 text-sm">ID: {adminId}</span>
+            </p>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
           >
-            Logout
+            <LogOut className="h-5 w-5" /> Logout
           </button>
         </div>
 
@@ -179,193 +198,111 @@ const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-gray-200 mb-6">
-          <button
-            onClick={() => setActiveTab('books')}
-            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 ${
-              activeTab === 'books' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <BookOpen className="h-4 w-4" /> Books
-          </button>
-          <button
-            onClick={fetchNumUsers}
-            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 ${
-              activeTab === 'users' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Users className="h-4 w-4" /> Users
-          </button>
-          <button
-            onClick={fetchDownloads}
-            className={`py-2 px-4 font-medium text-sm flex items-center gap-2 ${
-              activeTab === 'downloads' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Download className="h-4 w-4" /> Downloads
-          </button>
-        </div>
-
-        {/* Content based on active tab */}
-        {activeTab === 'books' && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Bookmark className="h-5 w-5" /> Book Management
-            </h2>
-            
-            {/* Add Book Form */}
-            <div className="mb-8">
-              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <PlusCircle className="h-5 w-5" /> Add New Book
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Book ID</label>
-                  <input
-                    type="text"
-                    value={newBook.book_id}
-                    onChange={(e) => setNewBook({...newBook, book_id: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    placeholder="Enter book ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={newBook.title}
-                    onChange={(e) => setNewBook({...newBook, title: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    placeholder="Enter book title"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Published Date</label>
-                  <input
-                    type="date"
-                    value={newBook.published_date}
-                    onChange={(e) => setNewBook({...newBook, published_date: e.target.value})}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Language</label>
-                  <select
-                    value={newBook.language}
-                    onChange={(e) => setNewBook({...newBook, language: e.target.value})}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="English">English</option>
-                    <option value="Hindi">Hindi</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+        {/* Book Management Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <BookOpen className="mr-2" /> Book Management
+          </h2>
+          
+          {/* Add Book Form */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium mb-3 flex items-center">
+              <PlusCircle className="mr-1" /> Add New Book
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Book ID</label>
+                <input
+                  type="text"
+                  value={newBook.book_id}
+                  onChange={(e) => setNewBook({...newBook, book_id: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter book ID"
+                />
               </div>
-              <button
-                onClick={handleAddBook}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded flex items-center gap-2"
-              >
-                {loading ? 'Adding...' : 'Add Book'}
-              </button>
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  value={newBook.title}
+                  onChange={(e) => setNewBook({...newBook, title: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter book title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Published Date</label>
+                <input
+                  type="date"
+                  value={newBook.published_date}
+                  onChange={(e) => setNewBook({...newBook, published_date: e.target.value})}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Language</label>
+                <input
+                  type="text"
+                  value={newBook.language}
+                  onChange={(e) => setNewBook({...newBook, language: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter language"
+                />
+              </div>
             </div>
-
-            {/* Book List */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Book List</h3>
-              {loading ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-              ) : books.length === 0 ? (
-                <div className="text-gray-500 py-4 text-center">No books found</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Published</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {books.map((book) => (
-                        <tr key={book.book_id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{book.book_id}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{book.title}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(book.published_date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{book.language}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => handleDeleteBook(book.book_id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </button>
-                              <button
-                                className="text-blue-600 hover:text-blue-900"
-                                title="Edit"
-                              >
-                                <Edit className="h-5 w-5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={handleAddBook}
+              disabled={loading}
+              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+            >
+              {loading ? 'Adding...' : 'Add Book'}
+            </button>
           </div>
-        )}
 
-        {activeTab === 'users' && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Users className="h-5 w-5" /> User Management
-            </h2>
-            
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">Total Registered Users</h3>
-              <p className="text-4xl font-bold text-blue-600">{numUsers}</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'downloads' && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Download className="h-5 w-5" /> Download Statistics
-            </h2>
-            
-            {downloads.length === 0 ? (
-              <div className="text-gray-500 py-8 text-center">No download data available</div>
+          {/* Book List */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Book List</h3>
+            {loading ? (
+              <div className="text-center py-4">Loading books...</div>
+            ) : books.length === 0 ? (
+              <div className="text-gray-500 text-center py-4">No books found</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Downloads</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Published</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Language</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {downloads.map((d, i) => (
-                      <tr key={i}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {d.book_id}
-                        </td>
+                    {books.map((book) => (
+                      <tr key={book.book_id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{book.book_id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{book.title}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {d.numdownloads}
+                          {new Date(book.published_date).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{book.language}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <button
+                            onClick={() => handleDeleteBook(book.book_id)}
+                            className="text-red-600 hover:text-red-900 mr-3"
+                            title="Delete"
+                            disabled={loading}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                          <button
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit"
+                            disabled={loading}
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -374,7 +311,73 @@ const Admin: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Admin Actions Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-6">Admin Actions</h2>
+          
+          <div className="flex flex-wrap gap-4 mb-8">
+            <button
+              onClick={fetchNumUsers}
+              disabled={loading}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition"
+            >
+              <Users className="h-5 w-5" /> {showUsers ? 'Refresh Users' : 'Show Users'}
+            </button>
+            
+            <button
+              onClick={fetchDownloads}
+              disabled={loading}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded transition"
+            >
+              <Download className="h-5 w-5" /> {showDownloads ? 'Refresh Downloads' : 'Show Downloads'}
+            </button>
+          </div>
+
+          {/* Users Count Display */}
+          {showUsers && (
+            <div className="mb-8 p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2 flex items-center">
+                <Users className="mr-2" /> User Statistics
+              </h3>
+              <p className="text-blue-600 font-medium">
+                Total Registered Users: <span className="text-blue-800">{numUsers}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Downloads Display */}
+          {showDownloads && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <Download className="mr-2" /> Download Statistics
+              </h3>
+              {downloads.length === 0 ? (
+                <div className="text-gray-500 text-center py-4">No download data available</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Book ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Downloads</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {downloads.map((d, i) => (
+                        <tr key={i}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{d.book_id}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{d.numdownloads}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
